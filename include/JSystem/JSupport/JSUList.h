@@ -72,6 +72,7 @@ public:
 
     JSULink<T> *getFirst() const { return (JSULink<T> *)getFirstLink(); }
     JSULink<T> *getLast() const { return (JSULink<T> *)getLastLink(); }
+    JSULink<T> *getNth(u32 index) const { return (JSULink<T> *)getNthLink(index); }
     JSULink<T> *getEnd() const { return nullptr; }
 
     u32 getNumLinks() const { return mLinkCount; }
