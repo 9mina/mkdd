@@ -284,8 +284,10 @@ void StringObj::update() {
 }
 
 void StringObj::setCurrentViewNo(u32 viewNo) {
+    u32 num = 0;
     ExModel *exModel = mExModel;
-    for (u32 num = 0; num < mStringNodeMgr->mStrNodeList.getNumLinks() - 1; num++, exModel++) {
+    
+    while (num < mStringNodeMgr->mStrNodeList.getNumLinks() - 1) {
         exModel->setCurrentViewNo(viewNo);
 
         JGeometry::TVec3f pos;
@@ -294,6 +296,8 @@ void StringObj::setCurrentViewNo(u32 viewNo) {
         Mtx lightMtx;
         ObjUtility::getCamDependLightMtx(viewNo, pos, lightMtx);
         mExModel[num].setEffectMtx(lightMtx, 0);
+        num++;
+        exModel++;
     }
 }
 
