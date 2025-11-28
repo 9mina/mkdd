@@ -289,7 +289,7 @@ void StringObj::setCurrentViewNo(u32 viewNo) {
         exModel->setCurrentViewNo(viewNo);
 
         JGeometry::TVec3f pos;
-        mStringNodeMgr->getNodePos(num, &pos);
+        mStringNodeMgr->getNodePos(viewNo, &pos);
 
         Mtx lightMtx;
         ObjUtility::getCamDependLightMtx(viewNo, pos, lightMtx);
