@@ -132,65 +132,68 @@ void StringNodeManager::doAirFricG(f32 friction, f32 globalScale) {
 }
 
 void StringNodeManager::doHeightCol() {
+    JSULink<StringNode> *node;
     CrsArea crsArea;
-    bool hittingRoof;
     u8 someCount = 0;
-
-    for (JSULink<StringNode> *link = mStrNodeList.getFirst()->getNext(); link != nullptr; link = link->getNext()) {
-        if (link->getObject()->_30 != 0) {
-            hittingRoof = false;
-            crsArea.search(2, link->getObject()->mPos);
+    
+    for (node = mStrNodeList.getFirst()->getNext(); node != nullptr; node = node->getNext()) {
+        if (node->getObject()->_30 != 0) {
+            bool someCheck = false;
+            crsArea.search(2, node->getObject()->mPos);
 
             if (crsArea.getArea() != nullptr) {
                 JGeometry::TVec3f roofPos;
                 crsArea.getRoofPosition(&roofPos);
-                if ((link->getObject()->mPos.y + 100.0f) > roofPos.y) {
-                    hittingRoof = true;
-                    link->getObject()->mVel.y = 0.0f;
-                    link->getObject()->mVel.x *= _18;
-                    link->getObject()->mVel.z *= _18;
-                    link->getObject()->mPos.y = roofPos.y - 100.0f;
+
+                if (node->getObject()->mPos.y + 100.0f > roofPos.y) {
+                    someCheck = true;
+                    node->getObject()->mVel.y = 0.0f;
+                    node->getObject()->mVel.x *= _18;
+                    node->getObject()->mVel.z *= _18;
+                    node->getObject()->mPos.y = roofPos.y - 100.0f;
                 }
             }
+            
+            CrsGround crsGroundInit(RaceMgr::sRaceManager->getCourse());
+            CrsGround *crsGround = &crsGroundInit;
 
-            CrsGround crsGround2(RaceMgr::sRaceManager->getCourse());
-            CrsGround *crsGround = &crsGround2;
             if ((mCrsGround != nullptr) && (someCount == _4c)) {
                 crsGround = mCrsGround;
             }
 
-            crsGround->search(link->getObject()->mPos, link->getObject()->_18);
-            StringNode *stringNode;
-            if ((crsGround->getAttribute() != CrsGround::Attr_10) &&
-                (crsGround->getHeight() > link->getObject()->mPos.y - _14)) {
+            crsGround->search(node->getObject()->mPos, node->getObject()->_18);
 
-                JGeometry::TVec3f crsGroundNormal;
-                crsGround->getNormal(&crsGroundNormal);
-                
-                f32 crsHeight = crsGround->getHeight();
+            if (crsGround->getAttribute() != 10) {
+                if (crsGround->getHeight() > (node->getObject()->mPos.y - _14)) {
+                    JGeometry::TVec3f crsGroundNormal;
+                    crsGround->getNormal(&crsGroundNormal);
+                    
+                    f32 crsHeight = crsGround->getHeight();
+                    f32 newScale = crsHeight - (node->getObject()->mPos.y - _14);
+                    crsGroundNormal.scale(newScale * _18);
+                    node->getObject()->mVel.add(crsGroundNormal);
 
-                f32 yPos = link->getObject()->mPos.y - crsHeight - _14;
-                crsGroundNormal *= yPos * _18;
-                link->getObject()->mVel.add(crsGroundNormal);
-                
-                stringNode = link->getObject();
-                crsHeight = crsGround->getHeight();
-                hittingRoof = true;
-                stringNode->mPos.y = _14 + crsHeight;
+                    StringNode *stringNode = node->getObject();
+                    crsHeight = crsGround->getHeight();
+                    someCheck = true;
+                    stringNode->mPos.y = _14 + crsHeight;
+                }
             }
-            
-            if (hittingRoof) {
-                link->getObject()->_31 = true;
+
+            if (someCheck) {
+                node->getObject()->_31 = true;
                 if ((mObjSoundMgr != nullptr) && (someCount == _40)) {
                     mObjSoundMgr->setSe(_3c);
                 }
+                
             } else {
-                link->getObject()->_31 = false;
+                node->getObject()->_31 = false;
             }
-            crsGround->getNormal(&link->getObject()->_24);
-            stringNode = link->getObject();
-            stringNode->_18 = stringNode->mPos;
+
+            crsGround->getNormal(&node->getObject()->_24);
+            node->getObject()->_18 = node->getObject()->mPos;
         }
+
         someCount++;
     }
 }
