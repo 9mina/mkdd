@@ -194,6 +194,22 @@ namespace JGeometry {
             rDest.set(x, y, z);
         }
 
+        inline void getYDirInline(TVec3f &rDest) const
+        {
+            f32 z = this->mMtx[2][1];
+            f32 y = this->mMtx[1][1];
+            f32 x = this->mMtx[0][1];
+            rDest.set(x, y, z);
+        }
+
+        inline void getZDirInline(TVec3f &rDest) const
+        {
+            f32 z = this->mMtx[2][2];
+            f32 y = this->mMtx[1][2];
+            f32 x = this->mMtx[0][2];
+            rDest.set(x, y, z);
+        }
+
 #ifdef NON_MATCHING
         inline void mult33Inline(const TVec3f &rSrc, TVec3f &rDest) const
         {

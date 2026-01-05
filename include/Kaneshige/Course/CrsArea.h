@@ -28,6 +28,7 @@ public:
     void searchLight(const JGeometry::TVec3f &p1) { search(7, p1); }
 
     bool isInside() const { return mArea != nullptr; }
+    Course::Area *getArea() const { return mArea; }
     f32 getRate() const { return mRate; }
     f32 getShadowRate() const { return getRate(); }
 
