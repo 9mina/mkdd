@@ -1308,7 +1308,7 @@ config.libs = [
             Object(Matching, "Sato/ItemKinoko.cpp"),
             Object(NonMatching, "Sato/ItemStar.cpp"),
             Object(NonMatching, "Sato/J3DEffectMgr.cpp"),
-            Object(NonMatching, "Sato/StringObj.cpp"),
+            Object(Matching, "Sato/StringObj.cpp"),
             Object(NonMatching, "Sato/ItemWanWan.cpp"),
             Object(NonMatching, "Sato/ItemBomb.cpp"),
             Object(NonMatching, "Sato/ObjUtility.cpp"),

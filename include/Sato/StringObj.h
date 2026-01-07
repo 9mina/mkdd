@@ -7,6 +7,7 @@
 #include "JSystem/JSupport/JSUList.h"
 #include "Kaneshige/DarkAnmMgr.h"
 #include "Kaneshige/ExModel.h"
+#include "Sato/ObjCollision.h"
 
 // Forward declarations
 class ExStringNodeManager;
@@ -23,13 +24,19 @@ class StringObj {
     void setCurrentViewNo(u32);
     void drawSimpleModel(u32, Mtx, J3DUClipper *, Mtx);
 
+    // Inline/Unused
+    void createShadowBrk(J3DAnmTevRegKey *);
+    void viewCalc(u32);
+    void viewCalcClipOn(u32);
+    void viewCalcClipOff(u32);
+
 public:
     // VTBL: 0x0
     StringNodeManager *mStringNodeMgr;          // 0x4
     ExModel *mExModel;                          // 0x8
     u32 _c;
     f32 mScale;                                 // 0x10
-    Mtx *_14;
+    MtxPtr _14;
     u8 _18;
     u8 _19[3];                                  // Padding?
     ItemDarkAnmPlayer **mItemDarkAnmPlayer;     // 0x1c
@@ -37,8 +44,16 @@ public:
 
 class StringNode {
 public:
-    StringNode();
-    ~StringNode();
+    StringNode() : _38(this) {
+        mVel.zero();
+        mPos.zero();
+        _18.zero();
+        _24.zero();
+        _30 = true;
+        _31 = false;
+        _34 = 0.0f;
+    }
+    ~StringNode() {}
     void calc();
 
     JGeometry::TVec3f mVel;                     // 0x0
@@ -54,8 +69,10 @@ public:
 
 class StringNodeManager {
 public:
-    StringNodeManager(u8, f32, bool, bool, u8);
-    virtual ~StringNodeManager();
+    StringNodeManager(u8 count, f32 speed, bool makeSoundMgr, bool makeCrsGround, u8 someFlag);
+    virtual ~StringNodeManager() {
+        delete[] _34;
+    }
     
     void setAllNodePos(const JGeometry::TVec3f &);
     void calc();
@@ -71,6 +88,17 @@ public:
     void setNodeVel(u32, JGeometry::TVec3f);
     void addNodePos(u32, JGeometry::TVec3f);
     void setNodePos(u32, JGeometry::TVec3f);
+
+    // Inline/Unused
+    void calcBetweenNodeVelAll(f32);
+    void calcBetweenNodeVel(StringNode *, StringNode *, f32);
+    void collideSphereAll(f32, ObjColSphere *, const JGeometry::TVec3f &);
+    void collideCylinderAll(f32, ObjColCylinder *, const JGeometry::TVec3f &);
+    void dispose();
+
+    void set_3c(u32 val) {
+        _3c = val;
+    }
 
     // VTBL: 0x0
     JSUList<StringNode> mStrNodeList;           // 0x4
@@ -94,12 +122,12 @@ public:
 
 class ExStringNodeManager : public StringNodeManager {
 public:
-    ExStringNodeManager();
-    ~ExStringNodeManager();
+    ExStringNodeManager(u8 count, f32 speed, bool makeSoundMgr, bool makeCrsGround, u8 someFlag) : StringNodeManager(count, speed, makeSoundMgr, makeCrsGround, someFlag) {
+        setNodeLengthAll(speed);
+    }
+    ~ExStringNodeManager() {}
     virtual void calcBetweenNodePosAll(f32);
     void setNodeLengthAll(f32);
-
-    f32 _50;
 };
 
 #endif // STRINGOBJ_H

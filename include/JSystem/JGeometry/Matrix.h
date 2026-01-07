@@ -82,20 +82,27 @@ namespace JGeometry {
         TRotation3() {}
         void identity33();
 
-        void getXDir(TVec3f &rDest) const
-        {
-            rDest.set<f32>(this->mMtx[0][0], this->mMtx[1][0], this->mMtx[2][0]);
-        };
+        // TODO: seems fakematch to me but that's a problem for later i guess
+        inline void getXDir(TVec3f &rDest) const {
+            f32 z = this->mMtx[2][0];
+            f32 y = this->mMtx[1][0];
+            f32 x = this->mMtx[0][0];
+            rDest.set(x, y, z);
+        }
 
-        void getYDir(TVec3f &rDest) const
-        {
-            rDest.set<f32>(this->mMtx[0][1], this->mMtx[1][1], this->mMtx[2][1]);
-        };
+        inline void getYDir(TVec3f &rDest) const {
+            f32 z = this->mMtx[2][1];
+            f32 y = this->mMtx[1][1];
+            f32 x = this->mMtx[0][1];
+            rDest.set(x, y, z);
+        }
 
-        void getZDir(TVec3f &rDest) const
-        {
-            rDest.set<f32>(this->mMtx[0][2], this->mMtx[1][2], this->mMtx[2][2]);
-        };
+        inline void getZDir(TVec3f &rDest) const {
+            f32 z = this->mMtx[2][2];
+            f32 y = this->mMtx[1][2];
+            f32 x = this->mMtx[0][2];
+            rDest.set(x, y, z);
+        }
 
         void getXYZDir(TVec3f &rDestX, TVec3f &rDestY, TVec3f &rDestZ) const;
         void setXDir(const TVec3f &rSrc);
@@ -185,30 +192,6 @@ namespace JGeometry {
 
         void mult33(TVec3f &) const;
         void mult33(const TVec3f &, TVec3f &) const;
-
-        inline void getXDirInline(TVec3f &rDest) const
-        {
-            f32 z = this->mMtx[2][0];
-            f32 y = this->mMtx[1][0];
-            f32 x = this->mMtx[0][0];
-            rDest.set(x, y, z);
-        }
-
-        inline void getYDirInline(TVec3f &rDest) const
-        {
-            f32 z = this->mMtx[2][1];
-            f32 y = this->mMtx[1][1];
-            f32 x = this->mMtx[0][1];
-            rDest.set(x, y, z);
-        }
-
-        inline void getZDirInline(TVec3f &rDest) const
-        {
-            f32 z = this->mMtx[2][2];
-            f32 y = this->mMtx[1][2];
-            f32 x = this->mMtx[0][2];
-            rDest.set(x, y, z);
-        }
 
 #ifdef NON_MATCHING
         inline void mult33Inline(const TVec3f &rSrc, TVec3f &rDest) const
