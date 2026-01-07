@@ -1,11 +1,13 @@
 #include "Sato/StringObj.h"
 #include "Inagaki/GameSoundMgr.h"
+#include "JSystem/JGeometry/Matrix.h"
 #include "JSystem/JGeometry/Vec.h"
 #include "JSystem/JKernel/JKRHeap.h"
 #include "JSystem/JMath/JMath.h"
 #include "JSystem/JSupport/JSUList.h"
 #include "JSystem/JUtility/JUTAssert.h"
 #include "Kaneshige/Course/Course.h"
+#include "Kaneshige/Course/CrsArea.h"
 #include "Kaneshige/Course/CrsGround.h"
 #include "Kaneshige/DarkAnmMgr.h"
 #include "Kaneshige/ExModel.h"
@@ -13,10 +15,12 @@
 #include "Kaneshige/SimpleDrawer.h"
 #include "Kaneshige/TexLODControl.h"
 #include "Sato/ObjUtility.h"
+#include "Sato/stMath.h"
 #include "dolphin/mtx.h"
 #include "JSystem/JGeometry/Util.h"
 #include "types.h"
 
+#include "JSystem/JAudio/JASFakeMatch2.h"
 
 StringNodeManager::StringNodeManager(u8 count, f32 speed, bool makeSoundMgr, bool makeCrsGround, u8 someFlag) {
     mCrsGround = nullptr;
@@ -52,17 +56,6 @@ StringNodeManager::StringNodeManager(u8 count, f32 speed, bool makeSoundMgr, boo
     _4c = someFlag;
 }
 
-StringNode::~StringNode() {}
-
-StringNode::StringNode() : _38(this) {
-    mVel.zero();
-    mPos.zero();
-    _18.zero();
-    _24.zero();
-    _30 = true;
-    _31 = false;
-    _34 = 0.0f;
-}
 
 void StringNodeManager::setAllNodePos(const JGeometry::TVec3f &param_1) {
     for (u8 i = 0; i < mStrNodeList.getNumLinks(); i++) {
@@ -80,31 +73,43 @@ void StringNodeManager::calc() {
     }
 }
 
-void StringNodeManager::calcBetweenNodePosAll(f32 param_1) {
+void StringNodeManager::calcBetweenNodeVelAll(const f32 f1) {
+
 }
 
-void StringNodeManager::calcBetweenNodePos(StringNode *strNodeOne, StringNode *strNodeTwo, f32 f1, f32 f2) {
-    JGeometry::TVec3f vecInput = strNodeTwo->mPos; // TODO: Declaration is needed, but why is this unused...?
+void StringNodeManager::calcBetweenNodePosAll(const f32 f1) {
+    JSUListIterator<StringNode> it = mStrNodeList.getLast()->getPrev();
+    
+    for (JSUListIterator<StringNode> it2(mStrNodeList.getLast()); it != mStrNodeList.getFirst(); --it, --it2) {
+        calcBetweenNodePos(it2.getObject(), it.getObject(), f1, _10);
+    }
+    
+    it = mStrNodeList.getFirst()->getNext();
+    for (JSUListIterator<StringNode> it2(mStrNodeList.getFirst()); it != mStrNodeList.getEnd(); ++it, ++it2) {
+        calcBetweenNodePos(it2.getObject(), it.getObject(), f1, _10);
+    }
+}
+
+void StringNodeManager::calcBetweenNodeVel(StringNode *strNodeOne, StringNode *strNodeTwo, f32 f1) {
+
+}
+
+void StringNodeManager::calcBetweenNodePos(StringNode *strNodeOne, StringNode *strNodeTwo, const f32 f1, const f32 f2) {
+    JGeometry::TVec3f vecInput(strNodeTwo->mPos); // TODO: Declaration is needed, but why is this unused...?
     JGeometry::TVec3f vecDiff;
     JGeometry::TVec3f vecNormalised;
     JGeometry::TVec3f vecScaled;
     JGeometry::TVec3f vecFinal;
 
     PSVECSubtract(&strNodeOne->mPos, &strNodeTwo->mPos, &vecDiff);
-    f32 magnitude = PSVECMag(&vecDiff);
+    f32 magnitude = vecDiff.length();
 
     if (magnitude > f2) {
         PSVECNormalize(&vecDiff, &vecNormalised);
         PSVECScale(&vecNormalised, &vecScaled, -f2);
         PSVECAdd(&strNodeOne->mPos, &vecScaled, &strNodeTwo->mPos);
 
-        f32 fVar1 = vecDiff.squared();
-        if (fVar1 <= JGeometry::TUtilf::epsilon()) {
-            vecFinal.zero();
-        } else {
-            fVar1 = JGeometry::TUtilf::inv_sqrt(fVar1);
-            vecFinal.scale(fVar1, vecDiff);
-        }
+        vecFinal.normalize(vecDiff);
 
         f32 fVar2 = (f1 * (magnitude - f2));
         f32 fVar3 = fVar2 > _44 ? _44 : fVar2;
@@ -114,7 +119,21 @@ void StringNodeManager::calcBetweenNodePos(StringNode *strNodeOne, StringNode *s
     }
 }
 
-void StringNodeManager::resetNodeAll(JGeometry::TVec3f *param_1) {
+void StringNodeManager::resetNodeAll(JGeometry::TVec3f *pPos) {
+    for (JSUListIterator<StringNode> it(mStrNodeList.getFirst()); it.isAvailable(); ++it) {
+        if (!pPos) {
+            it->mPos.zero();
+            it->_18.zero();
+        }
+        else {
+            it->mPos = *pPos;
+            it->_18 = it->mPos;
+        }
+        it->mVel.zero();
+        it->_24.zero();
+        it->_31 = 0;
+        it->_34 = 0.0f;
+    }
 }
 
 void StringNodeManager::moveNodeAll() {
@@ -124,10 +143,10 @@ void StringNodeManager::moveNodeAll() {
     }
 }
 
-void StringNodeManager::doAirFricG(f32 friction, f32 globalScale) {
+void StringNodeManager::doAirFricG(const f32 friction, const f32 globalScale) {
     for (JSULink<StringNode> *link = mStrNodeList.getFirst()->getNext(); link != nullptr; link = link->getNext()) {
-        link->getObject()->mVel.scale((f32)friction);
-        JMAVECScaleAdd(&_28, &link->getObject()->mVel, &link->getObject()->mVel, globalScale);
+        link->getObject()->mVel.scale(friction);
+        JMAVECScaleAdd(&_28, &link->getObject()->mVel, &link->getObject()->mVel, globalScale); // why does this not use scale mVel.scaleAdd?
     }
 }
 
@@ -234,7 +253,16 @@ void StringNodeManager::setNodePos(u32 num, JGeometry::TVec3f newPos) {
     mStrNodeList.getNth(num)->getObject()->mPos = newPos;
 }
 
-void ExStringNodeManager::calcBetweenNodePosAll(f32 param_1) {
+void ExStringNodeManager::calcBetweenNodePosAll(const f32 p1) {
+    JSUListIterator<StringNode> it, it2;
+    for (it = mStrNodeList.getLast()->getPrev(), it2 = mStrNodeList.getLast(); it != mStrNodeList.getFirst(); --it, --it2) {
+        f32 a = it->_34; // whatever
+        calcBetweenNodePos(it2.getObject(), it.getObject(), p1, a);
+    }
+    
+    for (it2 = mStrNodeList.getFirst()->getNext(), it = mStrNodeList.getFirst(); it2.isAvailable(); ++it2, ++it) {
+        calcBetweenNodePos(it.getObject(), it2.getObject(), p1, it->_34);
+    }
 }
 
 void ExStringNodeManager::setNodeLengthAll(f32 newLength) {
@@ -244,10 +272,18 @@ void ExStringNodeManager::setNodeLengthAll(f32 newLength) {
 }
 
 StringObj::StringObj(u8 nodeCount, bool someFlag) {
-}
+    mStringNodeMgr = new ExStringNodeManager(nodeCount, someFlag, true, false, 0);
+    mExModel = new ExModel[nodeCount];
+    _c = 0;
+    _18 = 1;
+    mItemDarkAnmPlayer = new ItemDarkAnmPlayer*[nodeCount];
 
-StringNodeManager::~StringNodeManager() {
-    delete[] _34;
+    for (u8 i = 0; i < nodeCount; i++) {
+        mItemDarkAnmPlayer[i] = new ItemDarkAnmPlayer(7);
+    }
+
+    mStringNodeMgr->set_3c(0x40000);
+    reset();
 }
 
 void StringObj::createModel(JKRSolidHeap *, u32) {
@@ -259,7 +295,7 @@ void StringObj::loadmodel(J3DModelData *modelData) {
     u32 i = 0; 
     while (i < mStringNodeMgr->mStrNodeList.getNumLinks()) {
         exModel->setModelData(modelData);
-        RaceMgr::sRaceManager->getCourse()->setFogInfo(exModel);
+        RCMGetCourse()->setFogInfo(exModel);
         exModel->setLODBias(
             TexLODControl::getManager()->getLODBias(TexLODControl::cLODBiasID_3)
         );
@@ -275,7 +311,63 @@ void StringObj::reset() {
 }
 
 void StringObj::calc() {
-    
+    mStringNodeMgr->calc();
+
+    JGeometry::TVec3f modelScale;
+    modelScale.setAll(mScale);
+
+    ExModel *exModel = mExModel;
+    JSUListIterator<StringNode> it(mStringNodeMgr->mStrNodeList.getFirst());
+
+    JGeometry::TRot3f m;
+    PSMTXCopy(_14, m);
+
+    f32 scale = 0.0001f;
+    if (mScale > 0.0f) {
+        scale = 1.0f / mScale;
+    }
+    PSMTXScaleApply(m, m, scale, scale, scale);
+
+    Mtx r_m;
+    stMTXRotDeg(r_m, 'Z', 90.0f);
+
+    for (u32 i = 0; i < mStringNodeMgr->mStrNodeList.getNumLinks() - 1; i++) {
+        if (i < mStringNodeMgr->mStrNodeList.getNumLinks() - 1) {
+            JGeometry::TVec3f cp, ang, vel, pos, pos2;
+
+            m.getYDir(ang);
+
+            mStringNodeMgr->getNodePos(i, &pos);
+            mStringNodeMgr->getNodePos(i + 1, &pos2);
+            vel.sub(pos, pos2);
+            
+            stVecNormalize(vel);
+            PSVECCrossProduct(&ang, &vel, &cp);
+            stVecNormalize(cp);
+            PSVECCrossProduct(&vel,&cp,&ang);
+            stVecNormalize(ang);
+            stMakeRMtx(m, cp, ang, vel);
+            PSMTXConcat(m, r_m, m);
+
+        }
+        exModel->setBaseScale(modelScale);
+
+        const JGeometry::TVec3f &modelPos(it->mPos);
+        m[0][3] = modelPos.x;
+        m[1][3] = modelPos.y;
+        m[2][3] = modelPos.z;
+        exModel->setBaseTRMtx(m);
+        exModel++;
+        ++it;
+    }
+
+    CrsArea area;
+    for (u32 i = 0; i < mStringNodeMgr->mStrNodeList.getNumLinks() - 1; i++) {
+        JGeometry::TVec3f pos;
+        mStringNodeMgr->getNodePos(i, &pos);
+        area.search(0, pos);
+        mItemDarkAnmPlayer[i]->calc(area, 0.0f);
+    }
 }
 
 void StringObj::update() {
@@ -286,21 +378,18 @@ void StringObj::update() {
     }
 }
 
-void StringObj::setCurrentViewNo(u32 viewNo) {
-    u32 num = 0;
-    ExModel *exModel = mExModel;
+void StringObj::setCurrentViewNo(const u32 viewNo) {
     
-    while (num < mStringNodeMgr->mStrNodeList.getNumLinks() - 1) {
+    ExModel *exModel = mExModel;
+    for (u32 i = 0; i < mStringNodeMgr->mStrNodeList.getNumLinks() - 1; i++, exModel++) {
         exModel->setCurrentViewNo(viewNo);
 
         JGeometry::TVec3f pos;
-        mStringNodeMgr->getNodePos(viewNo, &pos);
+        mStringNodeMgr->getNodePos(i, &pos);
 
         Mtx lightMtx;
         ObjUtility::getCamDependLightMtx(viewNo, pos, lightMtx);
-        mExModel[num].setEffectMtx(lightMtx, 0);
-        num++;
-        exModel++;
+        mExModel[i].setEffectMtx(lightMtx, 0);
     }
 }
 
@@ -315,13 +404,10 @@ void StringObj::drawSimpleModel(u32 p1, Mtx mtx1, J3DUClipper *j3duClipper, Mtx 
         for (u32 num = 0; num < mStringNodeMgr->mStrNodeList.getNumLinks() - 1; num++) {
             JGeometry::TVec3f pos;
             mStringNodeMgr->getNodePos(num, &pos);
-            f32 radius = pos.x; // FIX: should be `pos.z`, but this reorders instructions weirdly...?
 
-            mExModel[num].clipBySphere(p1, j3duClipper, mtx1, radius);
+            mExModel[num].clipBySphere(p1, j3duClipper, mtx1, mScale);
             mItemDarkAnmPlayer[num]->setTevColor(&mExModel[num]);
             mExModel[num].simpleDraw(p1, mtx2, 1);
         }
     }
 }
-
-ExStringNodeManager::~ExStringNodeManager() {}
