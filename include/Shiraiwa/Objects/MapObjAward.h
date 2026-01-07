@@ -4,7 +4,7 @@
 #include "Sato/GeographyObj.h"
 #include "Sato/StateObserver.h"
 #include "Sato/Objects/GeoItemBox.h"
-#include "Shiraiwa/MapObjDemoObj.h"
+#include "Shiraiwa/Objects/MapObjDemoObj.h"
 
 // Inline/Unused
 //void JSULink<TMapObjAwardItemBox>::~JSULink();

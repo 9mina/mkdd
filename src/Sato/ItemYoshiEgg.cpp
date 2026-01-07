@@ -78,8 +78,7 @@ void ItemYoshiEgg::loadAnmData(J3DModelData *mdlData) {
 void ItemYoshiEgg::createModel(JKRSolidHeap *heap, u32 p2, u32 p3) {
     mModel.createDifferedModel(heap, p2, p3 | (0x1000000 | 0x20000), false);
     mMat.setExModel(&mModel);
-    mMat.setAnmBase(sTexPattern);
-    mMat.initFrameCtrl();
+    mMat.attach(sTexPattern);
 }
 
 void ItemYoshiEgg::update() {
@@ -337,7 +336,7 @@ void ItemYoshiEgg::calcCreateItem(u32 *outKinds) {
         }
 
         //--------------------------------------------------------------
-        // 4?d.  Next round will draw from the three “common” entries
+        // 4?d.  Next round will draw from the three "Common" entries
         //       plus whatever we have just appended (0?2 entries)
         //--------------------------------------------------------------
         listSize = appended + 3;     // 3 mandatory + newly added

@@ -23,7 +23,7 @@
 #include "Sato/stEffectMgr.h"
 #include "Shiraiwa/Balloon.h"
 #include "Shiraiwa/LensFlare.h"
-#include "Shiraiwa/MapObjAward.h"
+#include "Shiraiwa/Objects/MapObjAward.h"
 #include "Shiraiwa/ZCaptureMgr.h"
 #include "dolphin/gx/GXEnum.h"
 #include "dolphin/gx/GXPixel.h"

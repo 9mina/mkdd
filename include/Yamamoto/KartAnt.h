@@ -3,7 +3,7 @@
 
 #include <JSystem/JGeometry/Vec.h>
 
-#include "Shiraiwa/MapObjAntLion.h"
+#include "Shiraiwa/Objects/MapObjAntLion.h"
 
 #include "types.h"
 

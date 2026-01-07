@@ -6,8 +6,10 @@
 #include "JSystem/JGeometry/Quat.h"
 #include "JSystem/JGeometry/Vec.h"
 #include "Kaneshige/Course/CrsData.h"
+#include "macros.h"
 
 class TFreeMove {
+public:
     TFreeMove();
     virtual ~TFreeMove() {}
     void init(JGeometry::TVec3f *, JGeometry::TVec3f *, f32);
@@ -24,6 +26,15 @@ class TFreeMove {
     void initStart();
     void setTargetPosUniform(const JGeometry::TVec3f &, int);
     void fixCurPosition();
+
+private:
+    JGeometry::TVec3f mTagret;
+    JGeometry::TVec3f *mpPos;
+    JGeometry::TVec3f *mpVel;
+    bool _18;
+    f32 _1c;
+    f32 _20;
+    f32 _24;
 };
 
 class TPathMove {
@@ -46,12 +57,14 @@ public:
     void getNodeDir(u16, JGeometry::TVec3f *);
 
 protected:
-
     const CrsData::SObject *mpObj; // 04
-    short _8;                      // 
+    s16 _8;                      // 
     JGeometry::TVec3f *mpPos;      // 0c
     JGeometry::TVec3f *mpVel;      // 10
-
+    f32 _14;
+    f32 _18;
+    bool _1c;
+    PLACEHOLDER_BYTES(0x1d, 0x24);
 }; // Size: 0x24
 
 class TFreeRotate {

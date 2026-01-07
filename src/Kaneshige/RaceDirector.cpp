@@ -10,7 +10,7 @@
 #include "Osako/system.h"
 #include "Sato/GeographyObjMgr.h"
 #include "Sato/JPEffectMgr.h"
-#include "Shiraiwa/MapObjHanabi.h"
+#include "Shiraiwa/Objects/MapObjHanabi.h"
 #include "kartEnums.h"
 
 #include "JSystem/JAudio/JASFakeMatch2.h"
