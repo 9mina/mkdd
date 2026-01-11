@@ -27,6 +27,14 @@ public:
     void setTargetPosUniform(const JGeometry::TVec3f &, int);
     void fixCurPosition();
 
+    bool hasTarget() const {
+        return _18;
+    }
+
+    void releaseTarget() { // not sure what to name this
+        _18 = false;
+    }
+
 private:
     JGeometry::TVec3f mTagret;
     JGeometry::TVec3f *mpPos;

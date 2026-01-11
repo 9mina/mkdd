@@ -24,9 +24,13 @@ public:
     void resetFrame() { mFrameCtrl.reset(); }
 
     J3DFrameCtrl *getFrameCtrl() { return &mFrameCtrl; }
+    f32 getFrame() const { return mFrameCtrl.getFrame(); }
+    f32 getRate() const { return mFrameCtrl.getRate(); }
+
     void setExModel(ExModel *model) { mModel = model; }
     void setRate(const float &rate) { mFrameCtrl.setRate(rate); }
     void setFrame(float frame) { mFrameCtrl.setFrame(frame); }
+    void stop() { mFrameCtrl.stop(); }
 
     J3DModelData *getModelData() { return mModel->getModelData(); }
 
@@ -53,6 +57,11 @@ public:
     static void loadClusterAnmData(J3DAnmCluster **, void *);
     static void loadClusterData(J3DDeformData * *, void *);
     static void setDeformData(ExModel *, J3DDeformData *, bool);
+
+    void setExModel(ExModel *mdl, J3DDeformData *deformData) {
+        mModel = mdl;
+        mDeformData = deformData;
+    }
 
     void update() {
         mDeformData->setAnm((J3DAnmCluster*)mAnmBase);

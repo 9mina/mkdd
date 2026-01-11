@@ -152,7 +152,7 @@ public:
 class JAUAudienceState {
 public:
     JAUAudienceState() {}
-    //~JAUDopplerAudienceState() {}
+    //~JAUAudienceState() {}
 
     void init() {
         Mtx m;
@@ -163,7 +163,7 @@ public:
         JGeometry::TPos3f m;
         mMtx.set(in);
         m.setPositionFromLookAt(mMtx);
-        m.getTransInline(_3c);
+        m.getTrans(_3c);
         _48.set(_3c);
         _30.zero();
 
@@ -190,7 +190,7 @@ public:
         JGeometry::TPos3f m;
         mMtx.set(in);
         m.setPositionFromLookAt(mMtx);
-        m.getTransInline(_3c);
+        m.getTrans(_3c);
         _48.set(_3c);
         _30.zero();
     }

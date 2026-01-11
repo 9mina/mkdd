@@ -13,7 +13,9 @@ namespace JGeometry {
     {
     public:
         SMatrix34C() {}
-        void set(const SMatrix34C<T> &rSrc);
+        void set(const SMatrix34C<T> &rSrc) {
+            JMath::gekko_ps_copy12(this, rSrc);
+        }
         void set(T rxx, T ryx, T rzx, T tx, T rxy, T ryy, T rzy, T ty, T rxz, T ryz, T rzz, T tz);
 
         void scale(T);
@@ -22,6 +24,8 @@ namespace JGeometry {
         {
             JMath::gekko_ps_copy12(this, pSrc);
         }
+
+        f32 at(u32 i, u32 j) const { return mMtx[i][j]; }
 
         T &ref(u32 i, u32 j) { return mMtx[i][j]; }
 
@@ -82,12 +86,11 @@ namespace JGeometry {
         TRotation3() {}
         void identity33();
 
-        // TODO: seems fakematch to me but that's a problem for later i guess
+        // TODO: getYDir doesn't match in StringObj with the same method as getXDir and getZDir
+        // however there is a chance Sato is a troll and didn't use the inline
+        // actually, Sato is a troll regardless
         inline void getXDir(TVec3f &rDest) const {
-            f32 z = this->mMtx[2][0];
-            f32 y = this->mMtx[1][0];
-            f32 x = this->mMtx[0][0];
-            rDest.set(x, y, z);
+            rDest.set(this->at(0, 0), this->at(1, 0), this->at(2, 0));
         }
 
         inline void getYDir(TVec3f &rDest) const {
@@ -98,10 +101,7 @@ namespace JGeometry {
         }
 
         inline void getZDir(TVec3f &rDest) const {
-            f32 z = this->mMtx[2][2];
-            f32 y = this->mMtx[1][2];
-            f32 x = this->mMtx[0][2];
-            rDest.set(x, y, z);
+            rDest.set(this->at(0, 2), this->at(1, 2), this->at(2, 2));
         }
 
         void getXYZDir(TVec3f &rDestX, TVec3f &rDestY, TVec3f &rDestZ) const;
@@ -210,8 +210,9 @@ namespace JGeometry {
     public:
         TPosition3() {}
         void getTrans(TVec3f &rDest) const {
-            rDest.set(this->mMtx[0][3], this->mMtx[1][3], this->mMtx[2][3]);
+            rDest.set(this->at(0, 3), this->at(1, 3), this->at(2, 3));
         }
+        
         void setTrans(const TVec3f &rSrc);
         void setTrans(f32 x, f32 y, f32 z);
         void zeroTrans()
@@ -245,14 +246,6 @@ namespace JGeometry {
             this->ref(2, 3) = (rLookAt[0][3] * this->mMtx[2][0]) - (rLookAt[1][3] * this->mMtx[2][1]) + rLookAt[0][3] * this->mMtx[2][2];
         }
         void setQT(const TQuat4f &rSrcQuat, const TVec3f &rSrcTrans);
-
-        inline void getTransInline(TVec3f &rDest) const
-        {
-            f32 z = this->mMtx[2][3];
-            f32 y = this->mMtx[1][3];
-            f32 x = this->mMtx[0][3];
-            rDest.set(x, y, z);
-        }
     };
 
     typedef TMatrix34<TSMtxf> TMtx34f;
