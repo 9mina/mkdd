@@ -86,18 +86,12 @@ namespace JGeometry {
         TRotation3() {}
         void identity33();
 
-        // TODO: getYDir doesn't match in StringObj with the same method as getXDir and getZDir
-        // however there is a chance Sato is a troll and didn't use the inline
-        // actually, Sato is a troll regardless
         inline void getXDir(TVec3f &rDest) const {
             rDest.set(this->at(0, 0), this->at(1, 0), this->at(2, 0));
         }
 
         inline void getYDir(TVec3f &rDest) const {
-            f32 z = this->mMtx[2][1];
-            f32 y = this->mMtx[1][1];
-            f32 x = this->mMtx[0][1];
-            rDest.set(x, y, z);
+            rDest.set(this->at(0,1), this->at(1, 1), this->at(2, 1));
         }
 
         inline void getZDir(TVec3f &rDest) const {
@@ -209,10 +203,12 @@ namespace JGeometry {
     {
     public:
         TPosition3() {}
+
+        
         void getTrans(TVec3f &rDest) const {
             rDest.set(this->at(0, 3), this->at(1, 3), this->at(2, 3));
         }
-        
+
         void setTrans(const TVec3f &rSrc);
         void setTrans(f32 x, f32 y, f32 z);
         void zeroTrans()

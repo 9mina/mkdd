@@ -304,33 +304,36 @@ void TMapObjWanwan::doFunc_Jumped() {
     mPos.add(mVel);    
 }
 
-void TMapObjWanwan::setRotate(f32 rotate)
-{
+void TMapObjWanwan::setRotate(f32 rotate) {
     mRotate = rotate;
+
+    // might be mRotMtx.setEulerXYZ?
     const f32 x = 0;
     const f32 y = mRotate;
     const f32 z = _230;
+    f32 cr = cos(x); // f26
+    f32 cp = cos(y); // f31
+    f32 cy = cos(z); // f30
+    f32 sr = sin(x);   // f29
+    f32 sp = sin(y); // f28
+    f32 sy = sin(z); // f7
+
+    // ???
+    f32 tmp = sy * sp;
+    f32 cpy = (cy * cp);
+    f32 spy = sp * sy;
+
+    mRotMtx[0][0] = ((tmp) * sr + (cp * cr));
+    mRotMtx[1][0] = (sr * cy);
+    mRotMtx[2][0] = -(sp * cr) + (sy * cp * sr);
     
-    f32 dVar2 = cos(x); // f26
-    f32 dVar6 = cos(y); // f31
-    f32 dVar5 = cos(z); // f30
-    f32 dVar4 = sin(x);   // f29
-    f32 dVar3 = sin(y); // f28
-    f32 dVar1 = sin(z); // f7
+    mRotMtx[0][1] = ((-sr * cp) + (spy) * cr);
+    mRotMtx[1][1] = (cy * cr);
+    mRotMtx[2][1] = (sp * sr + sy * (cp * cr));
 
-    f32 cxy = dVar6 * dVar2;
-
-    mRotMtx[0][0] = (dVar1 * dVar3) * dVar4 + cxy;
-    mRotMtx[1][0] = (dVar4 * dVar5);
-    mRotMtx[2][0] = -(dVar3 * dVar2) + ((dVar1 * dVar6) * dVar4);
-
-    mRotMtx[0][1] = ((-dVar4 * dVar6) + dVar2 * (dVar1 * dVar3));
-    mRotMtx[1][1] = (dVar5 * dVar2);
-    mRotMtx[2][1] = (dVar3 * dVar4 + dVar1 * (cxy));
-
-    mRotMtx[0][2] = (dVar5 * dVar3);
-    mRotMtx[1][2] = (-dVar1);
-    mRotMtx[2][2] = (dVar5 * dVar6);
+    mRotMtx[0][2] = (cy * sp);
+    mRotMtx[1][2] = (-sy);
+    mRotMtx[2][2] = (cpy);
 }
 
 void TMapObjWanwan::doFunc_Attack() {
@@ -433,7 +436,6 @@ void TMapObjWanwan::fallDown(s32 nextState, bool p2) {
             mVel.y = _218;
         }
     }
-
     createEmitterOnGround(&mpEmitter, "mk_wanSmoke_a");
 }
 
@@ -506,9 +508,10 @@ f32 TMapObjWanwan::getAngleToRand() {
     getWanwanBackPos(&backPos);
     backPos.sub(mObjData->position);
 
-    const f32 l = posDiff.x * mRotMtx[0][2] + posDiff.z * mRotMtx[2][2]; 
-
-    if ((l < 0.0f)
+    JGeometry::TVec3f zDir;
+    mRotMtx.getZDir(zDir);
+    
+    if ((zDir.dotZX(posDiff) < 0.0f)
         && (backPos.length() > mChainLength * 0.8f)) 
     {
             f32 a = std::atan2f(posDiff.x, posDiff.z);
@@ -532,7 +535,6 @@ f32 TMapObjWanwan::getRandRadius(u8 max, u8 min) {
         deg += min;
     }
     return MTXDegToRad(deg);
-    
 }
 
 void TMapObjWanwan::getWanwanBackPos(JGeometry::TVec3f *out) {
@@ -544,9 +546,8 @@ void TMapObjWanwan::getWanwanBackPos(JGeometry::TVec3f *out) {
         return;
     }
 
-    // TODO: all matrices from J3D might already be TPos3f of itself
-    JGeometry::TPos3f *bumpMtx = (JGeometry::TPos3f *)mModel.getModel()->getAnmMtx(sChainJointNo);
-    bumpMtx->getTrans(*out);
+    Mtx &bumpMtx = mModel.getModel()->getAnmMtx(sChainJointNo);
+    out->set(bumpMtx[0][3], bumpMtx[1][3], bumpMtx[2][3]);
 }
 
 f32 TMapObjWanwan::getAngleToAttack(JGeometry::TVec3f &v) {
@@ -572,8 +573,8 @@ void TMapObjWanwan::calc() {
         mFreeMove.update();
     }
     chainCorrect();
-    mpGround->search(mPos);
-    if (mPos.y - mHeightOffset <= mpGround->getHeight() ) {
+
+    if (isTouchGround()) {
         mpGround->search(mPos);
         mPos.y = mHeightOffset + mpGround->getHeight() - 0.1f;
         mVel.y = 0.0f;
@@ -581,8 +582,6 @@ void TMapObjWanwan::calc() {
     
     bool isWall = false;
     mpGround->search(mPos, pos);
-    
-    
     if (mpGround->getAttribute() == CrsGround::Attr_2) {
         JGeometry::TVec3f wall;
         
@@ -605,7 +604,6 @@ void TMapObjWanwan::calc() {
                 for (; a >= F_PI; a -= F_TAU);
                 mAttackAngle = a;
             }
-
         }
     }
 
@@ -667,8 +665,6 @@ void TMapObjWanwan::chainCorrect() {
     
     vel.zero();
     mpStringNodeMgr->setNodeVel(mNumChains - 1, vel);
-
-
     fixChain();
 }
 
@@ -723,6 +719,7 @@ void TMapObjWanwan::setChainPosition(TMapObjWanwanChain *pChain, JGeometry::TVec
     r_m.setXYZDir(cp, yDir, rPosDiff);
     PSMTXIdentity(b);
 
+    // might be setRotate?
     f32 s = sin(f);
     f32 c = cos(f);
 
@@ -730,11 +727,11 @@ void TMapObjWanwan::setChainPosition(TMapObjWanwanChain *pChain, JGeometry::TVec
     b[0][1] = -s;
     b[1][0] = s;
     b[1][1] = c;
-    b[2][2] = 1.0;
-    b[2][1] = 0.0;
-    b[1][2] = 0.0;
-    b[2][0] = 0.0;
-    b[0][2] = 0.0;
+    b[2][2] = 1.0f;
+    b[2][1] = 0.0f;
+    b[1][2] = 0.0f;
+    b[2][0] = 0.0f;
+    b[0][2] = 0.0f;
     
     PSMTXConcat(r_m, b, r_m);
     pChain->mRotMtx.set( r_m );
