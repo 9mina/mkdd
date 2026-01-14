@@ -7,7 +7,7 @@
 #include "Kaneshige/Objects/GeoPuller.h"
 #include "Kaneshige/Objects/GeoSplash.h"
 #include "Kaneshige/Objects/GeoWater.h"
-#include "Shiraiwa/MapObjPool.h"
+#include "Shiraiwa/Objects/MapObjPool.h"
 
 #include "mathHelper.h"
 

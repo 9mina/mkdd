@@ -2,13 +2,16 @@
 #define SATO_J3DANMOBJECT_H
 
 #include "JSystem/J3D/J3DAnmBase.h"
+#include "JSystem/J3D/J3DAnmCluster.h"
 #include "JSystem/J3D/J3DAnmColor.h"
 #include "JSystem/J3D/J3DAnmTransform.h"
 #include "JSystem/J3D/J3DFrameCtrl.h"
 #include "JSystem/J3D/J3DModel.h"
 #include "JSystem/J3D/J3DMtxCalc.h"
+#include "JSystem/J3D/J3DSkinDeform.h"
 #include "JSystem/JUtility/JUTAssert.h"
 #include "Kaneshige/ExModel.h"
+#include "types.h"
 
 class J3DAnmObjBase
 {
@@ -19,15 +22,15 @@ public:
     void frameProc() { mFrameCtrl.update(); }
     void update() { mFrameCtrl.update(); }
     void resetFrame() { mFrameCtrl.reset(); }
-    
-    void initFrameCtrl() {
-        initFrameCtrl(mAnmBase);
-    }
 
     J3DFrameCtrl *getFrameCtrl() { return &mFrameCtrl; }
+    f32 getFrame() const { return mFrameCtrl.getFrame(); }
+    f32 getRate() const { return mFrameCtrl.getRate(); }
+
     void setExModel(ExModel *model) { mModel = model; }
     void setRate(const float &rate) { mFrameCtrl.setRate(rate); }
     void setFrame(float frame) { mFrameCtrl.setFrame(frame); }
+    void stop() { mFrameCtrl.stop(); }
 
     J3DModelData *getModelData() { return mModel->getModelData(); }
 
@@ -36,8 +39,39 @@ public:
 
     ExModel *mModel;         // 04
     J3DFrameCtrl mFrameCtrl; // 08
+
+    // TODO: does this belong here or in J3DAnmObjMaterial? it doesn't make much sense to be here but it does fix offsets for all classes that inherit J3DAnmObjBase
     J3DAnmBase *mAnmBase;    // 1c
 }; // Size: 0x20
+
+class J3DAnmObjCluster : public J3DAnmObjBase {
+public:
+    J3DAnmObjCluster() {
+        mDeformData = nullptr;
+    }
+    virtual ~J3DAnmObjCluster() {}
+    virtual void anmFrameProc();
+
+    void attach(J3DAnmCluster *);
+
+    static void loadClusterAnmData(J3DAnmCluster **, void *);
+    static void loadClusterData(J3DDeformData * *, void *);
+    static void setDeformData(ExModel *, J3DDeformData *, bool);
+
+    void setExModel(ExModel *mdl, J3DDeformData *deformData) {
+        mModel = mdl;
+        mDeformData = deformData;
+    }
+
+    void update() {
+        mDeformData->setAnm((J3DAnmCluster*)mAnmBase);
+        mFrameCtrl.update();
+        anmFrameProc();
+    }
+
+private:
+    J3DDeformData *mDeformData;
+};
 
 class J3DAnmObjMaterial : public J3DAnmObjBase
 {
@@ -54,7 +88,7 @@ public:
     template <typename T>
     void attach(T *anm) {
         mAnmBase = anm;
-        initFrameCtrl(mAnmBase);
+        J3DAnmObjBase::initFrameCtrl(mAnmBase);
     }
 
     J3DAnmBase *getAnmBase() { return mAnmBase; }

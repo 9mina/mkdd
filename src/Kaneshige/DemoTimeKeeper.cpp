@@ -12,8 +12,8 @@
 #include "Sato/JPEffectMgr.h"
 #include "Sato/EffectScreen.h"
 #include "Sato/RivalSpeedCtrl.h"
-#include "Shiraiwa/MapObjAward.h"
-#include "Shiraiwa/MapObjHanabi.h"
+#include "Shiraiwa/Objects/MapObjAward.h"
+#include "Shiraiwa/Objects/MapObjHanabi.h"
 #include "kartEnums.h"
 
 s32 StaffRollTimeKeeper::sStartTitleCreditTime;

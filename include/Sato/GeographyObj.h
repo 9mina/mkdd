@@ -229,7 +229,7 @@ public:
     virtual u32 getJ3DModelDataTevStageNum() const { return 0x20000; }                              // 50
     virtual void createColModel(J3DModelData *);                                                    // 54
     virtual void createBoundsSphere(J3DModelData *);                                                // 58
-    virtual GeoAnmTableEntry *getAnmTbl() { return nullptr; }                                                   // 5C
+    virtual GeoAnmTableEntry *getAnmTbl() { return nullptr; }                                       // 5C
     virtual u16 getSizeAnmTbl() { return 0; }                                                       // 60
     virtual GeoObjSupervisor *getSupervisor() { return nullptr; }                                   // 64
     virtual void getItemThrowDirPow(JGeometry::TVec3f *, f32 *, const ItemObj &);                   // 68
@@ -314,7 +314,7 @@ class TMapObjHioNode : public GeographyObj
 public:
     TMapObjHioNode(u32 id) : GeographyObj(id) {}
     TMapObjHioNode(const CrsData::SObject &rObj) : GeographyObj(rObj) {}
-    virtual ~TMapObjHioNode();
+    virtual ~TMapObjHioNode() {}
 };
 
 #endif

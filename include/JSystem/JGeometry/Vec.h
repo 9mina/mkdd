@@ -261,13 +261,20 @@ namespace JGeometry {
             return *this;
         }
 
-        /*TVec3 operator+(const TVec3 &operand)
+        TVec3 operator-(const TVec3 &operand)
+        {
+            TVec3 tmp(*this);
+            tmp -= operand;
+            return tmp;
+        }
+
+        TVec3 operator+(const TVec3 &operand)
         {
             TVec3 tmp(*this);
             tmp += operand;
             return tmp;
         }
-*/
+
         TVec3 operator*(f32 scalar) const
         {
             TVec3 scaled(*this);
@@ -348,7 +355,18 @@ namespace JGeometry {
                 return 0.0f;
 
             f32 invsqrt = TUtilf::inv_sqrt(this_squared);
-            scale(invsqrt);
+            this->scale(invsqrt);
+            return invsqrt * this_squared;
+        }
+
+        f32 normalize(f32 scalar) // fabricated
+        {
+            f32 this_squared = squared();
+            if (this_squared <= TUtilf::epsilon())
+                return 0.0f;
+
+            f32 invsqrt = TUtilf::inv_sqrt(this_squared);
+            this->scale(invsqrt * scalar);
             return invsqrt * this_squared;
         }
 
@@ -356,12 +374,12 @@ namespace JGeometry {
         {
             f32 sq = other.squared();
             if (sq <= TUtilf::epsilon()) {
-                zero();
+                this->zero();
                 return 0.0f;
             }
             
             f32 invsqrt = TUtilf::inv_sqrt(sq);
-            scale(invsqrt, other);
+            this->scale(invsqrt, other);
             return invsqrt * sq;
         }
     };

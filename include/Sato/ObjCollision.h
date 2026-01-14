@@ -33,7 +33,8 @@ public:
 
     u8 IsHitBoundPos(JGeometry::TVec3f, JGeometry::TVec3f);
 
-    void setRadius(f32 rad) { mRadius = rad; }
+    void setRadius(const f32 rad) { mRadius = rad; }
+    void scaleRadius(const f32 scale) { mRadius = scale * mRadius; }
     void setScale(f32 scale) { mScale = scale; }
 
     f32 getRadius() const { return mRadius; }

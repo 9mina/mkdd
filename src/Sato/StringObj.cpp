@@ -319,7 +319,7 @@ void StringObj::calc() {
     ExModel *exModel = mExModel;
     JSUListIterator<StringNode> it(mStringNodeMgr->mStrNodeList.getFirst());
 
-    JGeometry::TRot3f m;
+    JGeometry::TRot3f m; // making this a matrix causes instruction swaps
     PSMTXCopy(_14, m);
 
     f32 scale = 0.0001f;
@@ -334,8 +334,7 @@ void StringObj::calc() {
     for (u32 i = 0; i < mStringNodeMgr->mStrNodeList.getNumLinks() - 1; i++) {
         if (i < mStringNodeMgr->mStrNodeList.getNumLinks() - 1) {
             JGeometry::TVec3f cp, ang, vel, pos, pos2;
-
-            m.getYDir(ang);
+            ang.set(m[0][1], m[1][1], m[2][1]);
 
             mStringNodeMgr->getNodePos(i, &pos);
             mStringNodeMgr->getNodePos(i + 1, &pos2);

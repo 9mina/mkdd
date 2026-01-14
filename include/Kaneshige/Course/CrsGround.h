@@ -43,6 +43,7 @@ public:
     enum EMat
     {
         // TODO
+        Mat_1 = 1,
         Mat_255 = 0xff,
     };
 
