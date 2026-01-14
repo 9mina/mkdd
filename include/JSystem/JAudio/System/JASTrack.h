@@ -218,17 +218,21 @@ public:
     JASSeqCtrl mSeqCtrl;               // 000
     JASTrackPort mTrackPort;           // 05c
     JASRegisterParam mRegisterParam;   // 080
+#ifndef __clang__
     union {
         struct {
+#endif
             MoveParam_ volume;
             MoveParam_ pitch;
             MoveParam_ fxmix;
             MoveParam_ pan;
             MoveParam_ dolby;
             MoveParam_ distFilter;
+#ifndef __clang__
         } params;
         MoveParam_ array[6];
     } mMove;          // 09c, volume, pitch, fxmix, pan, dolby, distFilter
+#endif
     JASOscillator::Data mOscParam[2];  // 0e4
     JASOscillator::Point mOscPoint[4]; // 114
     JASTrack *mParent;                 // 12c
