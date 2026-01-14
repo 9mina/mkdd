@@ -29,7 +29,7 @@ public:
     virtual void calc();
     virtual void doKartColCallBack(int);
     virtual GeoAnmTableEntry *getAnmTbl();
-    virtual  u32 getSizeAnmTbl();
+    virtual u16 getSizeAnmTbl();
 
     static GeoAnmTableEntry sBckAnmTable[1];
 };

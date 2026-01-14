@@ -50,10 +50,7 @@ void GeoMarioTree1::reset() {
 void GeoMarioTree1::createColModel(J3DModelData *mdlData) {
     createBoundsCylinder(mdlData, 210.0f, 600.0f);
     
-    // and we stumble on another nonmatch with this set of inlines...
-    // screw this code anyway, it doesn't do anything(i think)
     JGeometry::TVec3f dir;
-    //JGeometry::TVec3f dir(mRotMtx[0][2], mRotMtx[1][2], mRotMtx[2][2]);
     mRotMtx.getZDir(dir);
     dir.normalize();
 
@@ -86,7 +83,7 @@ GeoAnmTableEntry *GeoMarioTree1::getAnmTbl() {
     return nullptr;
 }
 
-u32 GeoMarioTree1::getSizeAnmTbl() {
+u16 GeoMarioTree1::getSizeAnmTbl() {
     return sizeof(sBckAnmTable); // TODO: was this meant to return the count or the actual size?(possible bug)
 }
 
