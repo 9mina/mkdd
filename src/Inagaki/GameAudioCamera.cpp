@@ -8,18 +8,10 @@
 #include "JSystem/JUtility/JUTAssert.h"
 #include "Kaneshige/Course/CrsArea.h"
 
-#include "JSystem/JAudio/JASFakeMatch.h"
-
-#ifdef MATCHING // TODO
-
-template <>
-JASMemPool< JAUDopplerAudible<4> > JASPoolAllocObject< JAUDopplerAudible<4> >::memPool_;
-template <>
-JASMemPool<JAISe> JASPoolAllocObject<JAISe>::memPool_;
-
-#endif
-
 namespace GameAudio {
+
+template <>
+f32 CustomAudience<4>::smCameraVolume[4];
 
 CameraMgr::CameraMgr(u32 p1, CustomAudience<4> *audience) {
     _4 = p1;
@@ -66,3 +58,14 @@ void CameraMgr::setSceneMax(u32 numPlayers) {
 }
 
 }
+
+#include "JSystem/JAudio/JASFakeMatch.h"
+
+#ifdef MATCHING // TODO
+
+template <>
+JASMemPool< JAUDopplerAudible<4> > JASPoolAllocObject< JAUDopplerAudible<4> >::memPool_;
+template <>
+JASMemPool<JAISe> JASPoolAllocObject<JAISe>::memPool_;
+
+#endif
