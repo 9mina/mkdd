@@ -1,3 +1,4 @@
+#include "JSystem/JGeometry/Vec.h"
 #include "Kaneshige/RaceMgr.h"
 #include "Osako/kartPad.h"
 #include "Sato/ItemObjMgr.h"
@@ -7,6 +8,7 @@
 #include "Yamamoto/kartCtrl.h"
 
 #include "JSystem/JAudio/JASFakeMatch2.h"
+#include "dolphin/mtx.h"
 
 // comments inside functions are inline functions being called in that function
 
@@ -610,7 +612,75 @@ void KartGame::DoTestPitch() {
 
 }
 
-void KartGame::DoLiftTurbo() {}
+void KartGame::DoLiftTurbo() {
+    KartBody *body = mBody;
+
+    JGeometry::TVec3f vec0;
+    JGeometry::TVec3f vec1;
+    JGeometry::TVec3f vec2;
+    JGeometry::TVec3f vec3;
+
+    if (!(body->mCarStatus & (KartBody::CsUnknown0 | KartBody::CsUnknown1)))
+        body->_518 = 0.f;
+
+    if (!(body->mCarStatus & (KartBody::CsUnknown0 | KartBody::CsUnknown1))
+        || body->getTouchNum() <= 1
+        || body->mCarStatus & (KartBody::CsUnknown5 | KartBody::CsUnknown10 | KartBody::CsUnknown26 | KartBody::CsUnknown27)
+        || body->mBodyGround.getAttribute() == 6) {
+        body->_564 = 0.f;
+        body->_518 = 0.f;
+        return;
+    }
+
+    if (GetKartCtrl()->GetCarSpeed(body->mMynum) <= 30.f)
+        return;
+
+    if (GetKartCtrl()->GetCarSpeed(body->mMynum) >= 40.f && body->_3c8 != 0.f) {
+        GetKartCtrl()->DevMatrixByVector(&vec1, &body->mVel, body->_110);
+        f32 v = vec1.z * 1.015f;
+        vec1.z *= 1.015f;
+        vec1.x *= 1.075f;
+
+        if (v < 0.f)
+            vec1.z = v * -1.f;
+
+        PSMTXMultVecSR(body->_110, &vec1, &body->mVel);
+    }
+
+    body->_564 = 0.38f;
+
+    f32 v0 = body->_518 * (body->_4dc * body->_3c8);
+
+    body->_518 = body->_514;
+
+    f32 v1 = v0 * body->_564;
+    f32 v2 = v0 * body->_564;
+    f32 inv = 1.f - body->_564;
+
+
+    vec0.set(body->_344.x, body->_344.y, body->_344.z);
+
+
+    vec1.set(body->_3a4 * v2, 0.f, body->_3a4 * v0 * inv);
+
+    if (body->mCarStatus & KartBody::CsUnknown1)
+        vec1.x *= -1.f;
+
+    PSMTXMultVec(body->_110, &vec0, &vec2);
+    PSMTXMultVecSR(body->_110, &vec1, &vec3);
+    body->DoForce(&vec2, &vec3);
+
+    vec0.set(body->_344.x, body->_344.y, 0.5f * -(body->_344.z));
+    vec1.set(body->_3a4 * v2, 0.f, body->_4dc * inv);
+
+    if (body->mCarStatus & KartBody::CsUnknown1)
+        vec1.x *= -1.f;
+
+    PSMTXMultVec(body->_110, &vec0, &vec1);
+    PSMTXMultVecSR(body->_110, &vec1, &vec3);
+
+    body->DoForce(&vec2, &vec3);
+}
 
 void KartGame::DoTurbo() {}
 
