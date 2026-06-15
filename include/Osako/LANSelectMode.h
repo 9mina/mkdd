@@ -21,8 +21,8 @@ public:
     class Background {
     public:
         Background(JKRArchive *archive) {
-            _120 = 0;
-            _122 = 0;
+            mTransFrame = 0;
+            mKeyFrame = 0;
             setup(archive);
         }
 
@@ -37,10 +37,10 @@ public:
         ~Background();
     private:
         J2DScreen mScreen;
-        J2DAnmTransform *_118;
-        J2DAnmTextureSRTKey*_11c;
-        s16 _120;
-        s16 _122;
+        J2DAnmTransform *mTrans;
+        J2DAnmTextureSRTKey*mTexKey;
+        s16 mTransFrame;
+        s16 mKeyFrame;
         PLACEHOLDER_BYTES(0x124, 0x128);
     }; // Size: 0x128?
 
@@ -60,14 +60,14 @@ public:
         virtual void changeColor(Color); // 0x80212dac
 
         void changeTex(ResTIMG *paImg) {
-            _c->changeTexture(paImg, 0);
+            mBasePicture->changeTexture(paImg, 0);
         }        
     protected:
-        int _4;
-        J2DPane *_8;
-        J2DPicture *_c;
-        J2DAnmTransform*_10;
-        s16 _14;
+        int mState;
+        J2DPane *mBasePane;
+        J2DPicture *mBasePicture;
+        J2DAnmTransform *mTrans;
+        s16 mTransFrame;
     }; // Size: 0x18
 
     class SelectableItem : public Item {
@@ -84,25 +84,25 @@ public:
         void setMax(int);
 
         int get_18() {
-            return _18;
+            return mIdx;
         }
     protected:
-        int _18;
-        int _1c;
-        u32 _20;
+        int mIdx;
+        int mMax;
+        u32 mMask;
         int _24;
-        J2DAnmTransform *_28;
-        J2DAnmTransform *_2c;
-        J2DAnmTextureSRTKey *_30;
-        J2DAnmTevRegKey *_34;
-        J2DAnmTevRegKey *_38;
-        J2DPane *_3c;
-        J2DPane *_40;
-        s16 _44;
-        s16 _46;
-        s16 _48;
-        s16 _4a;
-        s16 _4c;
+        J2DAnmTransform *mTrans1;
+        J2DAnmTransform *mTrans2;
+        J2DAnmTextureSRTKey *mTexKey;
+        J2DAnmTevRegKey *mKey1;
+        J2DAnmTevRegKey *mKey2;
+        J2DPane *mLeftPane;
+        J2DPane *mRightPane;
+        s16 mTransFrame1;
+        s16 mTransFrame2;
+        s16 mTexFrame;
+        s16 mKeyFrame1;
+        s16 mKeyFrame2;
     }; // size: 0x50? (padded)
 
     class SelectableItem1 : public SelectableItem {
@@ -115,13 +115,13 @@ public:
     
         // Fabricated Inlines
         void changeImg(ResTIMG **paImg) {
-            _54 = paImg;
-            _50->changeTexture(_54[_18], 0);
+            mTimg = paImg;
+            mPicture->changeTexture(mTimg[mIdx], 0);
 
         }    
     protected:
-        J2DPicture *_50;
-        ResTIMG **_54;
+        J2DPicture *mPicture;
+        ResTIMG **mTimg;
     }; // Size: 0x58
 
     class SelectableItem2 : public SelectableItem {
@@ -144,10 +144,10 @@ public:
         // Inline/Unused
         SelectableItemDisp(u32, J2DScreen *, void *, void *, void *);
     private:
-        J2DPicture *_50;
-        J2DPicture *_54;
-        J2DPicture *_58;
-        J2DAnmTevRegKey *_5c;
+        J2DPicture *mImgL1;
+        J2DPicture *mImgL2;
+        J2DPicture *mImgSw;
+        J2DAnmTevRegKey *mKeyDisp;
         s16 _60;
     }; // Size: 0x64
 
@@ -160,19 +160,19 @@ public:
         void changeValueMode(ValueMode); // 0x80213fc0
 
         ValueMode getValueMode() {
-            return _58;
+            return mValueMode;
         }
 
         // Inline/Unused
         SelectableItemSw(u32, J2DScreen *, void *, void *, void *, ResTIMG **, ResTIMG **, int, ResTIMG **, int);
         void setMaskSw(u32);
     private:
-        ValueMode _58;
-        int _5c;
-        int _60;
-        u32 _64;
-        ResTIMG **_68;
-        ResTIMG **_6c;
+        ValueMode mValueMode;
+        int mIdxSw;
+        int mMaxSw;
+        u32 mMaskSw;
+        ResTIMG **mValueTimg;
+        ResTIMG **mTimgSw;
     }; // Size: 0x70
     
     LANSelectMode(JKRArchive *); // 0x8021462c
@@ -189,38 +189,30 @@ private:
     bool _5;
     Background mBackground;
     J2DScreen mScreen; // foreground?
-    J2DAnmBase *_248;
-    s16 _24c;
-    int _250;
-    int _254;
-    SelectableItem1 *_258;
-    SelectableItem1 *_25c;
-    SelectableItem2 *_260;
-    SelectableItem1 *_264;
-    SelectableItemSw *_268;
-    SelectableItem1 *_26c;
-    SelectableItemDisp *_270;
+    J2DAnmBase *mAnm;
+    s16 mAnmFrame;
+    int mItemIdx;
+    u32 mItemMask;
+    SelectableItem1 *mModeItem;
+    SelectableItem1 *mPowerItem;
+    SelectableItem2 *mLapItem;
+    SelectableItem1 *mOrderItem;
+    SelectableItemSw *mCourseSelectItem;
+    SelectableItem1 *mTagItem;
+    SelectableItemDisp *mDisplayItem;
     Item *mItem;
-    Item *_278[8];
-    ResTIMG *_298[3];
-    ResTIMG *_2a4[4];
-    ResTIMG *_2b4[2];
-    ResTIMG *_2bc[7];
+    Item *mItems[8];
+    ResTIMG *mGameModeImg[3];
+    ResTIMG *mPowerImg[4];
+    ResTIMG *mOrderImg[2];
+    ResTIMG *mCrsOrderImg[7];
     ResTIMG *_2d8;
-    ResTIMG *_2dc;
-    ResTIMG *_2e0;
-    ResTIMG *_2e4[2];
-    ResTIMG *_2ec[16];
-    ResTIMG *_32c[6];
-    ResTIMG *_344[2];
+    ResTIMG *mStageOrderImg[2];
+    ResTIMG *mSelectImg[2];
+    ResTIMG *mCrsNameImg[16];
+    ResTIMG *mMapImg[6];
+    ResTIMG *mTagImg[2];
     PLACEHOLDER_BYTES(0x34c, 0x350);
 }; // class LANSelectMode
-
-extern const char *cpaGameModeTex[];
-extern const char *cpaCrsOrderTex[];
-extern const char *cpaCrsNameTex[];
-extern const char *cpaStageOrderTex[];
-extern const char *cpaLabelNameTex[];
-extern const char *cpaTagTex[];
 
 #endif // LANSELECTMODE_H

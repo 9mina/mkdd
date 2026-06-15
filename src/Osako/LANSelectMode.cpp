@@ -24,22 +24,22 @@ void LANSelectMode::Background::setup(JKRArchive *archive) {
     mScreen.setPriority("Back2.blo", 0x20000, archive);
     void *bck = JKRGetNameResource("Back2.bck", archive);
     void *btk = JKRGetNameResource("Back2.btk", archive);
-    _118 = (J2DAnmTransform*)J2DAnmLoaderDataBase::load(bck);
-    _11c = (J2DAnmTextureSRTKey*)J2DAnmLoaderDataBase::load(btk);
-    mScreen.setAnimation(_118);
-    mScreen.setAnimation(_11c);
+    mTrans = (J2DAnmTransform*)J2DAnmLoaderDataBase::load(bck);
+    mTexKey = (J2DAnmTextureSRTKey*)J2DAnmLoaderDataBase::load(btk);
+    mScreen.setAnimation(mTrans);
+    mScreen.setAnimation(mTexKey);
 }
 
 void LANSelectMode::Background::calc() {
-    _118->setFrame(_120);
-    _11c->setFrame(_122);
+    mTrans->setFrame(mTransFrame);
+    mTexKey->setFrame(mKeyFrame);
 
-    if (++_120 >= 178) {
-        _120 = 0;
+    if (++mTransFrame >= 178) {
+        mTransFrame = 0;
     }
 
-    if (++_122 >= 1400) {
-        _122 = 0;
+    if (++mKeyFrame >= 1400) {
+        mKeyFrame = 0;
     }
     mScreen.animation();
 }
@@ -47,243 +47,242 @@ void LANSelectMode::Background::calc() {
 LANSelectMode::Item::Item(u32 tagPrefix, J2DScreen *screen, void *bck) {
     // Size mismatch, should be 0x148 (currently 0x144)
     // however appears to match
-    _4 = 0;
-    _10 = (J2DAnmTransform*)J2DAnmLoaderDataBase::load(bck);
+    mState = 0;
+    mTrans = (J2DAnmTransform*)J2DAnmLoaderDataBase::load(bck);
     
     const u64 tag = (u64)tagPrefix << 16ull;
-    _8 = screen->search(0x5F43 + tag);
+    mBasePane = screen->search(0x5F43 + tag);
     J2DPane *pPane = screen->search(0x5F4D + tag);
 #line 96
     JUT_ASSERT(pPane->getTypeID() == J2DPaneType_Picture);
-    _c = (J2DPicture *)pPane;
-    _8->setAnimation(_10);
-    _c->setAnimation(_10);
-    _14 = 0x14;
+    mBasePicture = (J2DPicture *)pPane;
+    mBasePane->setAnimation(mTrans);
+    mBasePicture->setAnimation(mTrans);
+    mTransFrame = 20;
 }
 
 void LANSelectMode::Item::changeColor(LANSelectMode::Color color) {
-    _c->setWhite(spaColorPicture[color]->getWhite());
-    _c->setBlack(spaColorPicture[color]->getBlack());
+    mBasePicture->setWhite(spaColorPicture[color]->getWhite());
+    mBasePicture->setBlack(spaColorPicture[color]->getBlack());
 }
 
 // perhaps in and out should be swapped, who knows
 void LANSelectMode::Item::selectIn() {
-    _4 = 3;
+    mState = 3;
     changeColor(cLanColor_1);
 }
 
 void LANSelectMode::Item::selectOut() {
-    _4 = 1;
+    mState = 1;
     changeColor(cLanColor_2);
 }
 
 void LANSelectMode::Item::unselect() {
-    _14 = 20;
-    _4 = 0;
+    mTransFrame = 20;
+    mState = 0;
     changeColor(cLanColor_1);
 }
 
 void LANSelectMode::Item::calc() {
-    _10->setFrame(_14);
-    switch (_4) {
+    mTrans->setFrame(mTransFrame);
+    switch (mState) {
     case 1: {
-        if (++_14 >= 29) {
-            _14 = 29;
-            _4 = 2;
+        if (++mTransFrame >= 29) {
+            mTransFrame = 29;
+            mState = 2;
         }
         break;
     }
     case 3: {
-        if (--_14 < 20) {
-            _14 = 20;
-            _4 = 0;
+        if (--mTransFrame < 20) {
+            mTransFrame = 20;
+            mState = 0;
         }
         break;
     }
     }
 }
 
-LANSelectMode::SelectableItem::SelectableItem(u32 p1, J2DScreen *pScreen, void *p3, void *p4, void *p5, int p6, int p7, u32 p8) : Item(p1, pScreen, p3) {
-    _18 = p7;
-    _1c = p6;
-    _20 = p8;
+LANSelectMode::SelectableItem::SelectableItem(u32 tagPrefix, J2DScreen *pScreen, void *bck, void *btk, void *brk, int max, int startIdx, u32 mask) : Item(tagPrefix, pScreen, bck) {
+    mIdx = startIdx;
+    mMax = max;
+    mMask = mask;
     _24 = 0;
-    _28 = (J2DAnmTransform*)J2DAnmLoaderDataBase::load(p3);
-    _2c = (J2DAnmTransform*)J2DAnmLoaderDataBase::load(p3);
+    mTrans1 = (J2DAnmTransform*)J2DAnmLoaderDataBase::load(bck);
+    mTrans2 = (J2DAnmTransform*)J2DAnmLoaderDataBase::load(bck);
     
-    _30 = (J2DAnmTextureSRTKey*)J2DAnmLoaderDataBase::load(p4);
-    _30->searchUpdateMaterialID(pScreen);
+    mTexKey = (J2DAnmTextureSRTKey*)J2DAnmLoaderDataBase::load(btk);
+    mTexKey->searchUpdateMaterialID(pScreen);
     
-    _34 = (J2DAnmTevRegKey*)J2DAnmLoaderDataBase::load(p5);
-    _34->searchUpdateMaterialID(pScreen);
+    mKey1 = (J2DAnmTevRegKey*)J2DAnmLoaderDataBase::load(brk);
+    mKey1->searchUpdateMaterialID(pScreen);
 
-    _38 = (J2DAnmTevRegKey*)J2DAnmLoaderDataBase::load(p5);
-    _38->searchUpdateMaterialID(pScreen);
-    _44 = 90;
-    _46 = 40;
-    _48 = 0;
-    _4a = 0;
-    _4c = 0;
+    mKey2 = (J2DAnmTevRegKey*)J2DAnmLoaderDataBase::load(brk);
+    mKey2->searchUpdateMaterialID(pScreen);
+    mTransFrame1 = 90;
+    mTransFrame2 = 40;
+    mTexFrame = 0;
+    mKeyFrame1 = 0;
+    mKeyFrame2 = 0;
 
     J2DPane *pPane;
     
-    pPane = pScreen->search(p1 | 0x4e5f000000ull);
-    pPane->setAnimation(_10);
-
+    pPane = pScreen->search(tagPrefix | 0x4e5f000000ull);
+    pPane->setAnimation(mTrans);
     
-    const u64 tag = (u64)p1 << 24;
+    const u64 tag = (u64)tagPrefix << 24;
     pPane = pScreen->search(0x744c30 + tag);
-    pPane->setAnimation(_2c);
+    pPane->setAnimation(mTrans2);
 
     pPane = pScreen->search(0x745230 + tag);
-    pPane->setAnimation(_2c);
+    pPane->setAnimation(mTrans2);
 
-    _3c = pScreen->search(0x744c31 + tag);
-    _3c->setAnimation(_34);
+    mLeftPane = pScreen->search(0x744c31 + tag);
+    mLeftPane->setAnimation(mKey1);
 
-    _40 = pScreen->search(0x745231 + tag);
-    _40->setAnimation(_34);
+    mRightPane = pScreen->search(0x745231 + tag);
+    mRightPane->setAnimation(mKey1);
 
     pPane = pScreen->search(0x744c32 + tag);
-    pPane->setAnimation(_30);
+    pPane->setAnimation(mTexKey);
 
     pPane = pScreen->search(0x745232 + tag);
-    pPane->setAnimation(_30);
+    pPane->setAnimation(mTexKey);
 }
 
 bool LANSelectMode::SelectableItem::changeValueUp() {
-    int origValue = _18;
+    int origValue = mIdx;
     do {
-        if (++_18 >= _1c) {
-            _18 = 0;
+        if (++mIdx >= mMax) {
+            mIdx = 0;
         }
-    } while (_20 & (1 << _18));
+    } while (mMask & (1 << mIdx));
 
-    if (_18 != origValue) {
+    if (mIdx != origValue) {
         _24 = 1;
-        _3c->setAnimation((J2DAnmTransform*)nullptr);
-        _3c->setAnimation(_34);
-        _40->setAnimation(_28);
-        _40->setAnimation(_38);
-        _44 = 90;
-        _4c = 2;
+        mLeftPane->setAnimation((J2DAnmTransform*)nullptr);
+        mLeftPane->setAnimation(mKey1);
+        mRightPane->setAnimation(mTrans1);
+        mRightPane->setAnimation(mKey2);
+        mTransFrame1 = 90;
+        mKeyFrame2 = 2;
         return true;
     }
     return false;
 }
 
 bool LANSelectMode::SelectableItem::changeValueDown() {
-    int origValue = _18;
+    int origValue = mIdx;
     do {
-        if (--_18 < 0) {
-            _18 = _1c - 1;
+        if (--mIdx < 0) {
+            mIdx = mMax - 1;
         }
-    } while (_20 & (1 << _18));
+    } while (mMask & (1 << mIdx));
 
-    if (_18 != origValue) {
+    if (mIdx != origValue) {
         _24 = 1;
-        _3c->setAnimation(_28);
-        _3c->setAnimation(_38);
-        _40->setAnimation((J2DAnmTransform*)nullptr);
-        _40->setAnimation(_34);
-        _44 = 90;
-        _4c = 2;
+        mLeftPane->setAnimation(mTrans1);
+        mLeftPane->setAnimation(mKey2);
+        mRightPane->setAnimation((J2DAnmTransform*)nullptr);
+        mRightPane->setAnimation(mKey1);
+        mTransFrame1 = 90;
+        mKeyFrame2 = 2;
         return true;
     }
     return false;
 }
 
 void LANSelectMode::SelectableItem::setMask(u32 mask) {
-    _20 = mask;
-    if (_20 & 1 << _18) {
+    mMask = mask;
+    if (mMask & 1 << mIdx) {
         changeValueDown();
     }
 }
 
 void LANSelectMode::SelectableItem::setMax(int max) {
-    _1c = max;
-    if (_18 >= _1c) {
+    mMax = max;
+    if (mIdx >= mMax) {
         changeValueDown();
     }
 }
 
 void LANSelectMode::SelectableItem::update() {
     _24 = 1;
-    _44 = 93;
+    mTransFrame1 = 93;
     calc();
-    _44 = 90;
+    mTransFrame1 = 90;
     _24 = 0;
 }
 
 void LANSelectMode::SelectableItem::calc() {
     Item::calc();
-    _28->setFrame(_44);
+    mTrans1->setFrame(mTransFrame1);
     
     switch (_24) {
     case 1: {
-        if (++_44 >= 99) {
-            _44 = 98;
+        if (++mTransFrame1 >= 99) {
+            mTransFrame1 = 98;
         }
-        if (_4c > 1 && ++_4c >= 0x14) {
-            _4c = 1;
+        if (mKeyFrame2 > 1 && ++mKeyFrame2 >= 0x14) {
+            mKeyFrame2 = 1;
             _24 = 0;
         } 
         break;
     }
     
     }
-    _2c->setFrame(_46);
-    _30->setFrame(_48);
+    mTrans2->setFrame(mTransFrame2);
+    mTexKey->setFrame(mTexFrame);
 
-    switch (_4) {
+    switch (mState) {
     case 1: {
-        _4a = 1;
-        _4c = 1;
+        mKeyFrame1 = 1;
+        mKeyFrame2 = 1;
         break;
     }
     case 2: {
-        if (++_46 >= 80) {
-            _46 = 40;
+        if (++mTransFrame2 >= 80) {
+            mTransFrame2 = 40;
         }
-        if (++_48 >= 120) {
-            _48 = 0;
+        if (++mTexFrame >= 120) {
+            mTexFrame = 0;
         }
-        _4a = 1;
+        mKeyFrame1 = 1;
         break;
     }
     case 0: {
-        _46 = 40;
-        _4a = 0;
-        _48 = 0;
-        _4c = 0;
+        mTransFrame2 = 40;
+        mKeyFrame1 = 0;
+        mTexFrame = 0;
+        mKeyFrame2 = 0;
         break;
     }
     }
 
-    _34->setFrame(_4a);
-    _38->setFrame(_4c);
+    mKey1->setFrame(mKeyFrame1);
+    mKey2->setFrame(mKeyFrame2);
 }
 
 void LANSelectMode::SelectableItem1::changeColor(LANSelectMode::Color color) {
     Item::changeColor(color);
-    _50->setWhite(spaColorPicture[color]->getWhite());
-    _50->setBlack(spaColorPicture[color]->getBlack());
+    mPicture->setWhite(spaColorPicture[color]->getWhite());
+    mPicture->setBlack(spaColorPicture[color]->getBlack());
 }
 
-LANSelectMode::SelectableItem1::SelectableItem1(u32 tagPrefix, J2DScreen *screen, void *bck, void *p4, void *p5, ResTIMG **paImg, int p7) : SelectableItem(tagPrefix, screen, bck, p4, p5, p7, 0, 0) {
-    _54 = paImg;
+LANSelectMode::SelectableItem1::SelectableItem1(u32 tagPrefix, J2DScreen *screen, void *bck, void *btk, void *brk, ResTIMG **paImg, int max) : SelectableItem(tagPrefix, screen, bck, btk, brk, max, 0, 0) {
+    mTimg = paImg;
     J2DPane *pPane = screen->search(0x7377ull + ((u64)tagPrefix << 16));
 #line 406
     JUT_ASSERT(pPane->getTypeID() == J2DPaneType_Picture);
-    _50 = (J2DPicture*)pPane;
-    _50->setAnimation(_28);
-    _50->changeTexture(_54[_18], 0);
+    mPicture = (J2DPicture*)pPane;
+    mPicture->setAnimation(mTrans1);
+    mPicture->changeTexture(mTimg[mIdx], 0);
 }
 
 void LANSelectMode::SelectableItem1::calc() {
     SelectableItem::calc();
-    if (_24 == 1 && _44 == 94) {
-        _50->changeTexture(_54[_18], 0);
+    if (_24 == 1 && mTransFrame1 == 94) {
+        mPicture->changeTexture(mTimg[mIdx], 0);
     }
 }
 
@@ -294,12 +293,12 @@ LANSelectMode::SelectableItem2::SelectableItem2(u32 tagPrefix, J2DScreen *screen
 #line 457
     JUT_ASSERT(pPane->getTypeID() == J2DPaneType_Picture);
     _54 = (J2DPicture*)pPane;
-    _54->setAnimation(_28);
+    _54->setAnimation(mTrans1);
     
     pPane = screen->search(0x737731ull + ((u64)tagPrefix << 24));
     JUT_ASSERT(pPane->getTypeID() == J2DPaneType_Picture);
     _50 = (J2DPicture*)pPane;
-    _50->setAnimation(_28);
+    _50->setAnimation(mTrans1);
     _50->hide();
 }
 
@@ -314,9 +313,9 @@ void LANSelectMode::SelectableItem2::changeColor(LANSelectMode::Color color) {
 void LANSelectMode::SelectableItem2::calc() {
     SelectableItem::calc();
 
-    if (_24 == 1 && _44 == 94) {
-        if (_18 != 0) {
-            _50->changeTexture(Kart2DCommon::ptr()->getNumberTexture((Kart2DCommon::NumberTextureID)_18), 0);
+    if (_24 == 1 && mTransFrame1 == 94) {
+        if (mIdx != 0) {
+            _50->changeTexture(Kart2DCommon::ptr()->getNumberTexture((Kart2DCommon::NumberTextureID)mIdx), 0);
             _50->show();
             _54->hide();
         }
@@ -327,35 +326,35 @@ void LANSelectMode::SelectableItem2::calc() {
     }
 }
 
-LANSelectMode::SelectableItemSw::SelectableItemSw(u32 tagPrefix, J2DScreen *screen, void *bck, void *btk, void *brk, ResTIMG **p6, ResTIMG **p7, int p8, ResTIMG **p9, int p10) : SelectableItem1(tagPrefix, screen, bck, btk, brk, p9, p10) {
+LANSelectMode::SelectableItemSw::SelectableItemSw(u32 tagPrefix, J2DScreen *screen, void *bck, void *btk, void *brk, ResTIMG **p6, ResTIMG **imgSw, int maxSw, ResTIMG **paImg, int max) : SelectableItem1(tagPrefix, screen, bck, btk, brk, paImg, max) {
     // perhaps swap p6 and p7 with p9 and p10
-    _58 = cValueMode_0;
-    _5c = 0;
-    _60 = p8;
-    _64 = 0;
-    _68 = p6;
-    _6c = p7;
+    mValueMode = cValueMode_0;
+    mIdxSw = 0;
+    mMaxSw = maxSw;
+    mMaskSw = 0;
+    mValueTimg = p6;
+    mTimgSw = imgSw;
 }
 
 void LANSelectMode::SelectableItemSw::changeValueMode(LANSelectMode::SelectableItemSw::ValueMode mode) {
-    if (_58 == mode) return;
+    if (mValueMode == mode) return;
 
-    std::swap(_18, _5c);
-    std::swap(_1c, _60);
-    std::swap(_20, _64);
-    std::swap(_54, _6c);
+    std::swap(mIdx, mIdxSw);
+    std::swap(mMax, mMaxSw);
+    std::swap(mMask, mMaskSw);
+    std::swap(mTimg, mTimgSw);
 
-    _50->changeTexture(_54[_18], 0);
-    _c->changeTexture(_68[mode], 0);
+    mPicture->changeTexture(mTimg[mIdx], 0);
+    mBasePicture->changeTexture(mValueTimg[mode], 0);
 
-    _58 = mode;
+    mValueMode = mode;
 }
 
 void LANSelectMode::SelectableItemSw::setMaskSw(u32 mask) {
-    _64 = mask;
-    while (_64 & 1 << _5c) {
-        if (--_5c < 0) {
-            _5c = _60 - 1;
+    mMaskSw = mask;
+    while (mMaskSw & 1 << mIdxSw) {
+        if (--mIdxSw < 0) {
+            mIdxSw = mMaxSw - 1;
         }
     }
 }
@@ -363,17 +362,17 @@ void LANSelectMode::SelectableItemSw::setMaskSw(u32 mask) {
 LANSelectMode::SelectableItemDisp::SelectableItemDisp(u32 tagPrefix, J2DScreen *screen, void *bck, void *btk, void *brk) : SelectableItem(tagPrefix, screen, bck, btk, brk, 3, 0, 0) {
     J2DPane *pPane;
     pPane = screen->search(0x737730ull + ((u64)tagPrefix << 24));
-    pPane->setAnimation(_28);
+    pPane->setAnimation(mTrans1);
 
 #line 571
     pPane = screen->search(0x737731ull + ((u64)tagPrefix << 24));
     JUT_ASSERT(pPane->getTypeID() == J2DPaneType_Picture);
 
-    _58 = (J2DPicture*)pPane;
-    _58->setAnimation(_30);
+    mImgSw = (J2DPicture*)pPane;
+    mImgSw->setAnimation(mTexKey);
 
-    _5c = (J2DAnmTevRegKey*)J2DAnmLoaderDataBase::load(brk);
-    _5c->searchUpdateMaterialID(screen);
+    mKeyDisp = (J2DAnmTevRegKey*)J2DAnmLoaderDataBase::load(brk);
+    mKeyDisp->searchUpdateMaterialID(screen);
 
     _60 = 0;
 
@@ -381,69 +380,69 @@ LANSelectMode::SelectableItemDisp::SelectableItemDisp(u32 tagPrefix, J2DScreen *
     pPane = screen->search(0x6c31ull + ((u64)tagPrefix << 16));
     JUT_ASSERT(pPane->getTypeID() == J2DPaneType_Picture);
 
-    _50 = (J2DPicture*)pPane;
-    _50->setAnimation(_5c);
-    _50->hide();
+    mImgL1 = (J2DPicture*)pPane;
+    mImgL1->setAnimation(mKeyDisp);
+    mImgL1->hide();
 
 #line 592
     pPane = screen->search(0x6c32ull + ((u64)tagPrefix << 16));
     JUT_ASSERT(pPane->getTypeID() == J2DPaneType_Picture);
 
-    _54 = (J2DPicture*)pPane;
-    _54->setAnimation(_5c);
-    _54->hide();
+    mImgL2 = (J2DPicture*)pPane;
+    mImgL2->setAnimation(mKeyDisp);
+    mImgL2->hide();
     
     pPane = screen->search(0x737730ull + ((u64)tagPrefix << 24));
-    pPane->setAnimation(_30);
+    pPane->setAnimation(mTexKey);
 }
 
 void LANSelectMode::SelectableItemDisp::changeColor(LANSelectMode::Color color) {
     Item::changeColor(color);
 
-    _58->setWhite(spaColorPicture[color]->getWhite());
-    _58->setBlack(spaColorPicture[color]->getBlack());
+    mImgSw->setWhite(spaColorPicture[color]->getWhite());
+    mImgSw->setBlack(spaColorPicture[color]->getBlack());
 
-    _50->setWhite(spaColorPicture[color]->getWhite());
-    _50->setBlack(spaColorPicture[color]->getBlack());
+    mImgL1->setWhite(spaColorPicture[color]->getWhite());
+    mImgL1->setBlack(spaColorPicture[color]->getBlack());
 
-    _54->setWhite(spaColorPicture[color]->getWhite());
-    _54->setBlack(spaColorPicture[color]->getBlack());
+    mImgL2->setWhite(spaColorPicture[color]->getWhite());
+    mImgL2->setBlack(spaColorPicture[color]->getBlack());
 
     if (color == cLanColor_2) {
-        _50->setAnimation(_5c);
-        _54->setAnimation(_5c);
+        mImgL1->setAnimation(mKeyDisp);
+        mImgL2->setAnimation(mKeyDisp);
     }
     else {
-        _50->setAnimation((J2DAnmTevRegKey*)nullptr);
-        _54->setAnimation((J2DAnmTevRegKey*)nullptr);
+        mImgL1->setAnimation((J2DAnmTevRegKey*)nullptr);
+        mImgL2->setAnimation((J2DAnmTevRegKey*)nullptr);
     }
 }
 
 void LANSelectMode::SelectableItemDisp::calc() {
     SelectableItem::calc();
 
-    if (_24 == 1 && _44 == 94) {
-        switch (_18) {
+    if (_24 == 1 && mTransFrame1 == 94) {
+        switch (mIdx) {
         case 0: {
-            _50->hide();
-            _54->hide();
+            mImgL1->hide();
+            mImgL2->hide();
             break;
         }
         case 1: {
-            _50->show();
-            _54->hide();
+            mImgL1->show();
+            mImgL2->hide();
             break;
         }
         case 2: {
-            _50->show();
-            _54->show();
+            mImgL1->show();
+            mImgL2->show();
             break;
         }
         }
     }
     
-    if (_4 == 2) {
-        _5c->setFrame(_60);
+    if (mState == 2) {
+        mKeyDisp->setFrame(_60);
         if (++_60 >= 120) {
             _60 = 0;
         }
@@ -502,66 +501,66 @@ const char *cpaCrsNameTex[] = {
 
 LANSelectMode::LANSelectMode(JKRArchive *pArchive) : mBackground(pArchive) {
     mState = 1;
-    _250 = 0;
-    _254 = 0;
+    mItemIdx = 0;
+    mItemMask = 0;
     mScreen.setPriority("LANSelectMode.blo", 0x20000, pArchive);
 
     void *bck = JKRGetNameResource("LANSelectMode.bck", pArchive);
     void *btk = JKRGetNameResource("LANSelectMode.btk", pArchive);
     void *brk = JKRGetNameResource("LANSelectMode.brk", pArchive);
 
-    _248 = J2DAnmLoaderDataBase::load(bck);
-    _24c = 0;
+    mAnm = J2DAnmLoaderDataBase::load(bck);
+    mAnmFrame = 0;
 
     char buf[0x40];
     for (int  i = 0; i < 3; i++) {
         snprintf(buf, sizeof(buf), "timg/%s.bti", cpaGameModeTex[i]);
-        _298[i] = (ResTIMG *)pArchive->getResource(buf);
+        mGameModeImg[i] = (ResTIMG *)pArchive->getResource(buf);
     }
 
     for (int  i = 0; i < 4; i++) {
         snprintf(buf, sizeof(buf), "timg/Power_Mozi.%d.bti", i + 1);
-        _2a4[i] = (ResTIMG*)pArchive->getResource(buf);
+        mPowerImg[i] = (ResTIMG*)pArchive->getResource(buf);
     }
 
     for (int  i = 0; i < 2; i++) {
         snprintf(buf, sizeof(buf), "timg/Mozi_Order%s01.bti", cpaLabelNameTex[i]);
-        _2b4[i] = (ResTIMG*)pArchive->getResource(buf);
+        mOrderImg[i] = (ResTIMG*)pArchive->getResource(buf);
     }
 
     for (int  i = 0; i < 7; i++) {
         snprintf(buf, sizeof(buf), "timg/%s.bti", cpaCrsOrderTex[i]);
-        _2bc[i] = (ResTIMG*)pArchive->getResource(buf);
+        mCrsOrderImg[i] = (ResTIMG*)pArchive->getResource(buf);
     }
 
-    _2d8 = _2bc[0];
+    _2d8 = mCrsOrderImg[0];
 
     snprintf(buf, sizeof(buf), "timg/%s.bti", cpaStageOrderTex[0]);
-    _2dc = (ResTIMG*)pArchive->getResource(buf);
+    mStageOrderImg[0] = (ResTIMG*)pArchive->getResource(buf);
 
     snprintf(buf, sizeof(buf), "timg/%s.bti", cpaStageOrderTex[1]);
-    _2e0 = (ResTIMG*)pArchive->getResource(buf);
+    mStageOrderImg[1] = (ResTIMG*)pArchive->getResource(buf);
 
     for (int  i = 0; i < 2; i++) {
         snprintf(buf, sizeof(buf), "timg/Mozi_%sSelect01.bti", cpaLabelNameTex[i]);
-        _2e4[i] = (ResTIMG*)pArchive->getResource(buf);
+        mSelectImg[i] = (ResTIMG*)pArchive->getResource(buf);
     }
 
     for (int i = 0; i < 0x10; i++) {
         snprintf(buf, sizeof(buf), "timg/CoName_%s.bti", cpaCrsNameTex[i]);
-        _2ec[i] = (ResTIMG*)pArchive->getResource(buf);
+        mCrsNameImg[i] = (ResTIMG*)pArchive->getResource(buf);
     }
 
     for (int i = 0; i < 6; i++) {
         snprintf(buf, sizeof(buf), "timg/Mozi_Map%d.bti", i + 1);
-        _32c[i] = (ResTIMG*)pArchive->getResource(buf);
+        mMapImg[i] = (ResTIMG*)pArchive->getResource(buf);
     }
 
-    std::swap(_32c[5], _32c[4]);
+    std::swap(mMapImg[5], mMapImg[4]);
 
     for (int i = 0; i < 2; i++) {
         snprintf(buf, sizeof(buf), "timg/Mozi_%s.bti", cpaTagTex[i]);
-        _344[i] = (ResTIMG*)pArchive->getResource(buf);
+        mTagImg[i] = (ResTIMG*)pArchive->getResource(buf);
     }
 
     for (int i = 0; i < 3; i++) {
@@ -571,40 +570,40 @@ LANSelectMode::LANSelectMode(JKRArchive *pArchive) : mBackground(pArchive) {
         spaColorPicture[i] = (J2DPicture*)pPane; 
     }
 
-    _258 = new SelectableItem1('GMM', &mScreen, bck, btk, brk, _298, 3);
-    _25c = new SelectableItem1('POW', &mScreen, bck, btk, brk, _2a4, 4);
-    _260 = new SelectableItem2('LAP', &mScreen, bck, btk, brk);
-    _264 = new SelectableItem1('TOU', &mScreen, bck, btk, brk, _2bc, 7);
-    _268 = new SelectableItemSw('COU', &mScreen, bck, btk, brk, _2e4, _32c, 6, _2ec, 16);
-    _26c = new SelectableItem1('TAG', &mScreen, bck, btk, brk, _344, 2);
-    _270 = new SelectableItemDisp('DIS', &mScreen, bck, btk, brk);
+    mModeItem = new SelectableItem1('GMM', &mScreen, bck, btk, brk, mGameModeImg, 3);
+    mPowerItem = new SelectableItem1('POW', &mScreen, bck, btk, brk, mPowerImg, 4);
+    mLapItem = new SelectableItem2('LAP', &mScreen, bck, btk, brk);
+    mOrderItem = new SelectableItem1('TOU', &mScreen, bck, btk, brk, mCrsOrderImg, 7);
+    mCourseSelectItem = new SelectableItemSw('COU', &mScreen, bck, btk, brk, mSelectImg, mMapImg, 6, mCrsNameImg, 16);
+    mTagItem = new SelectableItem1('TAG', &mScreen, bck, btk, brk, mTagImg, 2);
+    mDisplayItem = new SelectableItemDisp('DIS', &mScreen, bck, btk, brk);
 
     mItem = new Item('OKK', &mScreen, bck);
-    _278[0] = _258;
-    _278[1] = _25c;
-    _278[2] = _260;
-    _278[3] = _264;
-    _278[4] = _268;
-    _278[5] = _26c;
-    _278[6] = _270;
-    _278[7] = mItem;
+    mItems[0] = mModeItem;
+    mItems[1] = mPowerItem;
+    mItems[2] = mLapItem;
+    mItems[3] = mOrderItem;
+    mItems[4] = mCourseSelectItem;
+    mItems[5] = mTagItem;
+    mItems[6] = mDisplayItem;
+    mItems[7] = mItem;
 
-    _278[0]->changeColor(cLanColor_2);
-    _278[1]->changeColor(cLanColor_1);
-    _278[2]->changeColor(cLanColor_1);
-    _278[3]->changeColor(cLanColor_1);
-    _278[4]->changeColor(cLanColor_0);
-    _278[5]->changeColor(cLanColor_1);
-    _278[6]->changeColor(cLanColor_1);
-    _278[7]->changeColor(cLanColor_1);
+    mItems[0]->changeColor(cLanColor_2);
+    mItems[1]->changeColor(cLanColor_1);
+    mItems[2]->changeColor(cLanColor_1);
+    mItems[3]->changeColor(cLanColor_1);
+    mItems[4]->changeColor(cLanColor_0);
+    mItems[5]->changeColor(cLanColor_1);
+    mItems[6]->changeColor(cLanColor_1);
+    mItems[7]->changeColor(cLanColor_1);
     gLANPlayInfo.resumeInfo(this);
 
     NetGameMgr *netMgr = NetGameMgr::ptr();
     if (!(netMgr->get12ec() & 4)) {
-        _25c->setMask(8);
+        mPowerItem->setMask(8);
     }
     if (!(netMgr->get12ec() & 8)) {
-        _264->setMask(0x40);
+        mOrderItem->setMask(0x40);
     }
 
     u32 mask1 = 0;
@@ -620,23 +619,23 @@ LANSelectMode::LANSelectMode(JKRArchive *pArchive) : mBackground(pArchive) {
         mask2 |= 0x20;
     }
 
-    if (_268->getValueMode() == SelectableItemSw::cValueMode_0) {
-        _268->setMask(mask1);
-        _268->setMaskSw(mask2);
+    if (mCourseSelectItem->getValueMode() == SelectableItemSw::cValueMode_0) {
+        mCourseSelectItem->setMask(mask1);
+        mCourseSelectItem->setMaskSw(mask2);
     }
     else {
-        _268->setMask(mask2);
-        _268->setMaskSw(mask1);
+        mCourseSelectItem->setMask(mask2);
+        mCourseSelectItem->setMaskSw(mask1);
     }
 
     for (int i = 0; i < 7; i++) {
-        _278[i]->update();
+        mItems[i]->update();
         directView(i);
     }
 
-    _254 |= 0x10;
+    mItemMask |= 0x10;
     
-    _258->selectOut();
+    mModeItem->selectOut();
 }
 
 LANSelectMode::Background::~Background() {}
@@ -644,49 +643,49 @@ LANSelectMode::Background::~Background() {}
 void LANSelectMode::directView(int i) {
     switch (i) {
     case 0: {
-        switch (_258->get_18()) {
+        switch (mModeItem->get_18()) {
         case 0:
         {
-            _25c->changeColor(cLanColor_1);
-            _254 &= ~2;
-            _260->changeColor(cLanColor_1);
-            _254 &= ~4;
+            mPowerItem->changeColor(cLanColor_1);
+            mItemMask &= ~2;
+            mLapItem->changeColor(cLanColor_1);
+            mItemMask &= ~4;
             u32 mask = 0;
             if (!(NetGameMgr::ptr()->get12ec() & 8)) {
                 mask |= 0x40;
             }
-            _264->changeTex(_2b4[0]);
-            _264->changeImg(_2bc);
+            mOrderItem->changeTex(mOrderImg[0]);
+            mOrderItem->changeImg(mCrsOrderImg);
 
 
 
-            _264->setMask(mask);
-            _268->changeValueMode(SelectableItemSw::cValueMode_0);
+            mOrderItem->setMask(mask);
+            mCourseSelectItem->changeValueMode(SelectableItemSw::cValueMode_0);
             break;
         }
         case 1:
         case 2: {
-            _25c->changeColor(cLanColor_0);
-            _254 |= 2;
-            _260->changeColor(cLanColor_0);
-            _254 |= 4;
+            mPowerItem->changeColor(cLanColor_0);
+            mItemMask |= 2;
+            mLapItem->changeColor(cLanColor_0);
+            mItemMask |= 4;
 
-            _264->changeTex(_2b4[1]);
-            _264->changeImg(&_2d8);
+            mOrderItem->changeTex(mOrderImg[1]);
+            mOrderItem->changeImg(&_2d8);
 
-            _264->setMask(0x78);
-            _268->changeValueMode(SelectableItemSw::cValueMode_1);
+            mOrderItem->setMask(0x78);
+            mCourseSelectItem->changeValueMode(SelectableItemSw::cValueMode_1);
             break;
         }
         }
         break;
     }
     case 3: {
-        switch (_264->get_18()) {
+        switch (mOrderItem->get_18()) {
         
         case 1: {
-            _268->changeColor(cLanColor_1);
-            _254 &= ~0x10;
+            mCourseSelectItem->changeColor(cLanColor_1);
+            mItemMask &= ~0x10;
             break;
         }
         case 0:
@@ -695,8 +694,8 @@ void LANSelectMode::directView(int i) {
         case 4:
         case 5:
         case 6: {
-            _268->changeColor(cLanColor_0);
-            _254 |= 0x10;
+            mCourseSelectItem->changeColor(cLanColor_0);
+            mItemMask |= 0x10;
             break;
         }
         default: {
@@ -720,44 +719,44 @@ int LANSelectMode::calc() {
     case 2: {
         if (pad->testRepeat(KartGamePad::MAINSTICK_UP)) {
             GetGameAudioMain()->startSystemSe(0x20000);
-            _278[_250]->selectIn();
+            mItems[mItemIdx]->selectIn();
             do {
-                if (--_250 < 0) {
-                    _250 = 7;
+                if (--mItemIdx < 0) {
+                    mItemIdx = 7;
                 }
-            } while(_254 & 1 << _250);
+            } while(mItemMask & 1 << mItemIdx);
 
-            _278[_250]->selectOut();
+            mItems[mItemIdx]->selectOut();
         }
         else if (pad->testRepeat(KartGamePad::MAINSTICK_DOWN)) {
             GetGameAudioMain()->startSystemSe(0x20000);
-            _278[_250]->selectIn();
+            mItems[mItemIdx]->selectIn();
             do {
-                if (++_250 >= 8) {
-                    _250 = 0;
+                if (++mItemIdx >= 8) {
+                    mItemIdx = 0;
                 }
-            } while(_254 & 1 << _250);
+            } while(mItemMask & 1 << mItemIdx);
 
-            _278[_250]->selectOut();
+            mItems[mItemIdx]->selectOut();
         }
         else if (pad->testRepeat(KartGamePad::MAINSTICK_LEFT)) {
-            if (_278[_250]->changeValueDown()) {
+            if (mItems[mItemIdx]->changeValueDown()) {
                 GetGameAudioMain()->startSystemSe(0x2000c);
-                directView(_250);
+                directView(mItemIdx);
             }
         }
         else if (pad->testRepeat(KartGamePad::MAINSTICK_RIGHT)) {
-            if (_278[_250]->changeValueUp()) {
-                directView(_250);
+            if (mItems[mItemIdx]->changeValueUp()) {
+                directView(mItemIdx);
                 GetGameAudioMain()->startSystemSe(0x2000c);
             }
         }
 
         if (pad->testTrigger(KartGamePad::A)) {
-            if (_250 == 7) {
+            if (mItemIdx == 7) {
                 GetGameAudioMain()->startSystemSe(0x20003);
                 mState = 3;
-                _24c = 120;
+                mAnmFrame = 120;
                 _5 = true;
                 MenuTitleLine::ptr()->lift();
                 SYSTEM_StartFadeOut(15);
@@ -768,7 +767,7 @@ int LANSelectMode::calc() {
             if (_4) {
                 GetGameAudioMain()->startSystemSe(0x20004);
                 mState = 3;
-                _24c = 120;
+                mAnmFrame = 120;
                 _5 = false;
                 MenuTitleLine::ptr()->lift();
                 SYSTEM_StartFadeOut(15);
@@ -800,19 +799,19 @@ void LANSelectMode::calcAnm() {
     mBackground.calc();
 
     for (int i = 0; i < 8; i++) {
-        _278[i]->calc();
+        mItems[i]->calc();
     }
 
-    _248->setFrame(_24c);
+    mAnm->setFrame(mAnmFrame);
     switch(mState) {
     case 1: {
-        if (++_24c >= 24) {
+        if (++mAnmFrame >= 24) {
             mState = 2;
         }
         break;
     }
     case 3: {
-        if (++_24c >= 131) {
+        if (++mAnmFrame >= 131) {
             mState = 4;
         }
         break;
@@ -835,16 +834,16 @@ void LANSelectMode::start(bool p1) {
         GetGameAudioMain()->startSequenceBgm(0x1000002);
     }
 
-    if (_250 != 0) {
-        _278[_250]->unselect();
-        _250 = 0;
+    if (mItemIdx != 0) {
+        mItems[mItemIdx]->unselect();
+        mItemIdx = 0;
     }
-    _278[_250]->selectOut();
+    mItems[mItemIdx]->selectOut();
     mState = 1;
-    _24c = 0;
+    mAnmFrame = 0;
     gLANPlayInfo.resumeInfo(this);
     for (int i = 0; i < 7; i++) {
-        _278[i]->update();
+        mItems[i]->update();
         directView(i);
     }
 
@@ -854,13 +853,13 @@ void LANSelectMode::start(bool p1) {
 
 void LANSelectMode::setDisplayMax() {
     if (NetGameMgr::ptr()->getNetworkCubes() > 4) {
-        _270->setMax(1);
+        mDisplayItem->setMax(1);
     }
-    else if (NetGameMgr::ptr()->getNetworkCubes() > 2 || _26c->get_18() == 1) {
-        _270->setMax(2);
+    else if (NetGameMgr::ptr()->getNetworkCubes() > 2 || mTagItem->get_18() == 1) {
+        mDisplayItem->setMax(2);
     }
     else {
-        _270->setMax(3);
+        mDisplayItem->setMax(3);
     }
 }
 
