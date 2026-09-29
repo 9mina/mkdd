@@ -410,7 +410,7 @@ f32 KartGame::DoWarmUpRoll() {
                 body->mCarStatus |= (KartBody::DriftLeft | 1ull << 47);
                 body->mCarStatus &= ~(KartBody::DriftRight | 1ull << 48);
                 body->mSterrNorm = 0.043611001f;
-                if (body->mFrame < -0.90000004f) {
+                if (body->mFrame > -0.90000004f) {
                     body->mSterrNorm = 0.1133888f;
                 }
             } else if (body->mFrame > 0.8f) {

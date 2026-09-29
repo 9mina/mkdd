@@ -90,7 +90,7 @@ public:
     // void DoTurboPower();
     // void CheckBalloonPlayer();
     KartBody *mBody; // 00
-    u32 _4;
+    JugemPoint  *mJugemPoint;
     u8 _8; // probably a bitmask
     u8 _9;
     u8 _A;

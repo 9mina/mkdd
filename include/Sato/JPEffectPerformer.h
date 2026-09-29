@@ -22,6 +22,8 @@ public:
         Effect_Unknown12 = 0x12,    // Star react.
         Effect_Burn = 0x13,
         Effect_Unknown17 = 0x17,
+        Effect_Unknown18 = 0x18,
+        Effect_Unknown19 = 0x19,
         Effect_Unknown1b = 0x1b,    // something slide related
         Effect_Unknown1A = 0x1A,
         Effect_Star = 0x1c,

@@ -52,6 +52,7 @@ public:
         CsUnknown12 = 1<<12,
         CsUnknown14 = 1<<14,
         CsUnknown15 = 1<<15,
+        CsUnknown16 = 1<<16,
         CsUnknown17 = 1<<17,
         CsUnknown18 = 1<<18,
         CsUnknown20 = 1<<20,
@@ -111,7 +112,7 @@ public:
     KartStrat *getStrat() { return mKartStrat; }
     KartThunder *getThunder() { return mKartThunder; }
     KartDamage *getDamage() { return mKartDamage; }
-    KartGame *getGame() { return mKartGame; }    
+    KartGame *getGame() { return mKartGame; }
     KartItem *getItem() { return mKartItem; }
     KartTumble *getTumble() { return mKartTumble; }
     KartHandle *getHandle() { return mKartHandle; }
@@ -157,7 +158,7 @@ public:
     KartPerCam *mKartPerCam;
     u8 *mSettingPtrs[2];
     ECharID CharIDs[2];
-    void *mUnkSub10c; 
+    void *mUnkSub10c;
     Mtx _110;
     Mtx mPlayerPosMtx;
     Mtx _170;
