@@ -1051,7 +1051,30 @@ void KartGame::MakeJump() {}
 
 void KartGame::DoAirCheck() {}
 
-void KartGame::DoRearSlidePower() {}
+void KartGame::DoRearSlidePower() {
+    KartBody *body = mBody;
+
+    JGeometry::TVec3f vec0;
+    JGeometry::TVec3f vec1;
+    JGeometry::TVec3f vec2;
+    JGeometry::TVec3f vec3;
+
+    vec0.set(0.f, 0.f, -1.2f);
+
+    vec1.set(-body->_35c.x * body->_3a4, 0.f, body->_35c.z * body->_3a4);
+
+    PSMTXMultVec(body->_110, &vec0, &vec2);
+    PSMTXMultVecSR(body->_110, &vec1, &vec3);
+
+    body->DoForce(&vec2, &vec3);
+
+    vec0.set(0.f, 0.f, 1.f);
+
+    PSMTXMultVec(body->_110, &vec0, &vec2);
+    PSMTXMultVecSR(body->_110, &vec1, &vec3);
+
+    body->DoForce(&vec2, &vec3);
+}
 
 void KartGame::DoRearSlideBody() {
     // void JGeometry::TVec3<float>::div(float) {}
